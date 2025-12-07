@@ -61,4 +61,11 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.save(course);
         log.info("Course id={} status updated to {} by user {}", courseId, status, actor.getEmail());
     }
+
+    @Override
+    public Course getPublishedCourseById(Long courseId) {
+        return courseRepository.findById(courseId)
+                .filter(c -> c.getStatus() == CourseStatus.PUBLISHED)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found or not available"));
+    }
 }
