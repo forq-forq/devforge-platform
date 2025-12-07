@@ -6,15 +6,8 @@
 </head>
 <body>
 
-<!-- Simple Navbar (Should ideally be a fragment) -->
-<nav class="navbar navbar-light bg-white shadow-sm mb-4">
-    <div class="container">
-        <a class="navbar-brand fw-bold text-primary" href="/">DevForge</a>
-        <div>
-            <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
-        </div>
-    </div>
-</nav>
+<!-- Simple Navbar -->
+<div th:replace="~{layout/nav :: header}"></div>
 
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
