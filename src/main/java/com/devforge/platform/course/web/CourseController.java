@@ -31,6 +31,8 @@ public class CourseController {
     // CONSTANTS for views
     private static final String LIST_VIEW = "course/list";
     private static final String CREATE_VIEW = "course/create";
+    private static final String MY_COURSES_VIEW = "course/my-courses";
+
 
     /**
      * Lists all published courses (Public catalog).
@@ -70,5 +72,27 @@ public class CourseController {
         courseService.createCourse(request, author);
         
         return "redirect:/courses?created";
+    }
+
+    /**
+     * Lists courses created by the logged-in teacher.
+     */
+    @GetMapping("/my")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String myCourses(Model model, Principal principal) {
+        User author = userService.getByEmail(principal.getName());
+        model.addAttribute("courses", courseService.getCoursesByAuthor(author));
+        return MY_COURSES_VIEW;
+    }
+
+    /**
+     * Publishes a draft course.
+     */
+    @PostMapping("/{id}/publish")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String publishCourse(@org.springframework.web.bind.annotation.PathVariable Long id, Principal principal) {
+        User author = userService.getByEmail(principal.getName());
+        courseService.updateStatus(id, com.devforge.platform.course.domain.CourseStatus.PUBLISHED, author);
+        return "redirect:/courses/my?published";
     }
 }

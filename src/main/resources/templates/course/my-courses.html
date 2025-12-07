@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>My Courses | DevForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Instructor Dashboard</h2>
+        <a href="/courses/create" class="btn btn-primary">+ New Course</a>
+    </div>
+
+    <div th:if="${param.published}" class="alert alert-success alert-dismissible fade show">
+        Course published successfully! It is now visible to students.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>Title</th>
+                    <th>Level</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="course : ${courses}">
+                    <td class="fw-bold" th:text="${course.title}">Java Basics</td>
+                    <td>
+                        <span class="badge bg-secondary" th:text="${course.level}">BEGINNER</span>
+                    </td>
+                    <td>
+                        <span class="badge" 
+                              th:classappend="${course.status.name() == 'PUBLISHED' ? 'bg-success' : 'bg-warning text-dark'}"
+                              th:text="${course.status}">DRAFT</span>
+                    </td>
+                    <td th:text="${#temporals.format(course.createdAt, 'dd-MM-yyyy')}">01-01-2025</td>
+                    <td>
+                        <!-- Кнопка Publish только для черновиков -->
+                        <form th:if="${course.status.name() == 'DRAFT'}" 
+                              th:action="@{/courses/{id}/publish(id=${course.id})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-success">🚀 Publish</button>
+                        </form>
+                        <span th:if="${course.status.name() == 'PUBLISHED'}" class="text-muted small">Live</span>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(courses)}">
+                    <td colspan="5" class="text-center py-4 text-muted">You haven't created any courses yet.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="/courses" class="text-decoration-none">&larr; Back to Public Catalog</a>
+    </div>
+</div>
+
+</body>
+</html>
