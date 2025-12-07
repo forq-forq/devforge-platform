@@ -1,1 +1,26 @@
-spring.application.name=platform
+spring:
+  application:
+    name: devforge-platform
+
+  datasource:
+    url: jdbc:h2:mem:devforgedb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  thymeleaf:
+    cache: false
