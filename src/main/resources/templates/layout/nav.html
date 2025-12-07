@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<nav th:fragment="header" class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">DevForge</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/courses">Catalog</a>
+                </li>
+                <!-- Only Teacher-visible -->
+                <li class="nav-item" sec:authorize="hasRole('TEACHER')">
+                    <a class="nav-link text-warning" href="/courses/my">Instructor Dashboard</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center">
+                <!-- For Guests -->
+                <div sec:authorize="isAnonymous()">
+                    <a href="/login" class="btn btn-outline-light btn-sm me-2">Login</a>
+                    <a href="/register" class="btn btn-primary btn-sm">Register</a>
+                </div>
+
+                <!-- For Authtorized -->
+                <div sec:authorize="isAuthenticated()">
+                    <span class="navbar-text text-light me-3">
+                        <small>User: <span sec:authentication="name">email@example.com</span></small>
+                    </span>
+                    <!-- Exit button (Form POST) - Remove error 404 -->
+                    <form th:action="@{/logout}" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+</body>
+</html>

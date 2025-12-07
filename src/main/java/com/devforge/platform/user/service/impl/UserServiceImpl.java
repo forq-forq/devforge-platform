@@ -65,4 +65,10 @@ public class UserServiceImpl implements UserService {
         
         return savedUser;
     }
+
+    @Override
+    public User getByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found: " + email));
+    }
 }
