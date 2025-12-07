@@ -30,7 +30,7 @@ public class SecurityConfig {
      * Defines which URLs are public and which require authentication.
      */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
         http
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints (Static resources)

@@ -1,10 +1,11 @@
 package com.devforge.platform.user.repository;
 
-import com.devforge.platform.user.domain.User;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import com.devforge.platform.user.domain.User;
 
 /**
  * Data Access Layer for User entity.
@@ -16,7 +17,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * Retrieves a user by their email address.
      *
-     * @param email the email to search for
+     * @param egit add src/main/java/com/devforge/platform/user/web/dto/mail the email to search for
      * @return an Optional containing the user if found, or empty otherwise
      */
     Optional<User> findByEmail(String email);
