@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>DevForge Platform</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .hero { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 100px 0; }
+        .hero h1 { font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="/">DevForge</a>
+        <div class="d-flex">
+            <!-- Only non-authorized users can see (Anonymous) -->
+            <div sec:authorize="isAnonymous()">
+                <a href="/login" class="btn btn-outline-primary me-2">Login</a>
+                <a href="/register" class="btn btn-primary">Register</a>
+            </div>
+            
+            <!-- Only authorized users can see (Authenticated) -->
+            <div sec:authorize="isAuthenticated()">
+                <span class="navbar-text me-3">
+                    Hello, <span sec:authentication="name">User</span>!
+                </span>
+                <form th:action="@{/logout}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<div class="hero text-center">
+    <div class="container">
+        <h1 class="display-4 mb-4">Master Coding with DevForge</h1>
+        <p class="lead mb-5">Learn Algorithms, Data Structures, and System Design with AI-powered mentorship.</p>
+        
+        <div sec:authorize="isAnonymous()">
+            <a href="/register" class="btn btn-light btn-lg px-5 fw-bold text-primary">Get Started</a>
+        </div>
+        
+        <div sec:authorize="isAuthenticated()">
+            <a href="/courses" class="btn btn-warning btn-lg px-5 fw-bold">Browse Courses</a>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <h2 class="text-center mb-5">Why Choose Us?</h2>
+    <div class="row text-center">
+        <div class="col-md-4">
+            <h3>🧩 Modular Learning</h3>
+            <p>Structured courses broken down into digestible modules.</p>
+        </div>
+        <div class="col-md-4">
+            <h3>💻 Practical Tasks</h3>
+            <p>Solve real-world coding problems directly in the browser.</p>
+        </div>
+        <div class="col-md-4">
+            <h3>🚀 Career Growth</h3>
+            <p>Prepare for technical interviews with top-tier materials.</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
