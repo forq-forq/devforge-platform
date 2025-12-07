@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Course Catalog | DevForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Simple Navbar (Should ideally be a fragment) -->
+<nav class="navbar navbar-light bg-white shadow-sm mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="/">DevForge</a>
+        <div>
+            <a href="/logout" class="btn btn-outline-danger btn-sm">Logout</a>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Explore Courses</h2>
+        
+        <!-- Button can be seen only by Teacher and Admins -->
+        <div sec:authorize="hasAnyRole('TEACHER', 'ADMIN')">
+            <a href="/courses/create" class="btn btn-success">+ Create Course</a>
+        </div>
+    </div>
+
+    <!-- Alert Success -->
+    <div th:if="${param.created}" class="alert alert-success alert-dismissible fade show">
+        Course created successfully! It is currently in <strong>DRAFT</strong> status.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Course Grid -->
+    <div class="row">
+        <!-- Loop through courses -->
+        <div class="col-md-4 mb-4" th:each="course : ${courses}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <span class="badge bg-info text-dark mb-2" th:text="${course.level}">BEGINNER</span>
+                    <h5 class="card-title fw-bold" th:text="${course.title}">Java Basics</h5>
+                    <p class="card-text text-muted" th:text="${#strings.abbreviate(course.description, 100)}">
+                        Short description...
+                    </p>
+                    <p class="small text-secondary mb-3">
+                        By <span th:text="${course.author.fullName}">Author Name</span>
+                    </p>
+                </div>
+                <div class="card-footer bg-white border-top-0">
+                    <a href="#" class="btn btn-outline-primary w-100">View Details</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="col-12 text-center py-5" th:if="${#lists.isEmpty(courses)}">
+            <h4 class="text-muted">No courses available yet.</h4>
+            <p sec:authorize="hasRole('TEACHER')">Be the first to create one!</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

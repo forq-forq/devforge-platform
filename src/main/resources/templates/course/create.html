@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Course | DevForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h3 class="mb-0">Create New Course</h3>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/courses/create}" th:object="${course}" method="post">
+                        
+                        <!-- Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Course Title</label>
+                            <input type="text" id="title" th:field="*{title}" class="form-control"
+                                   th:classappend="${#fields.hasErrors('title')} ? 'is-invalid' : ''" placeholder="e.g. Advanced Java Patterns">
+                            <div class="invalid-feedback" th:errors="*{title}"></div>
+                        </div>
+
+                        <!-- Level -->
+                        <div class="mb-3">
+                            <label for="level" class="form-label">Difficulty Level</label>
+                            <select id="level" th:field="*{level}" class="form-select"
+                                    th:classappend="${#fields.hasErrors('level')} ? 'is-invalid' : ''">
+                                <option value="" disabled selected>Select level...</option>
+                                <option value="BEGINNER">Beginner</option>
+                                <option value="INTERMEDIATE">Intermediate</option>
+                                <option value="ADVANCED">Advanced</option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{level}"></div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea id="description" th:field="*{description}" class="form-control" rows="5"
+                                      th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"></textarea>
+                            <div class="invalid-feedback" th:errors="*{description}"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/courses" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Draft</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

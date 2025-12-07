@@ -17,4 +17,12 @@ public interface UserService {
      * @throws IllegalArgumentException if the email is already in use
      */
     User register(RegisterRequest request);
+
+    /**
+     * Finds a user by email.
+     * @param email The email to search for.
+     * @return The User entity.
+     * @throws org.springframework.security.core.userdetails.UsernameNotFoundException if not found.
+     */
+    User getByEmail(String email);
 }
