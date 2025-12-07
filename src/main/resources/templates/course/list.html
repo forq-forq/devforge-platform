@@ -40,8 +40,18 @@
                         By <span th:text="${course.author.fullName}">Author Name</span>
                     </p>
                 </div>
-                <div class="card-footer bg-white border-top-0">
-                    <a href="#" class="btn btn-outline-primary w-100">View Details</a>
+                <div class="card-footer bg-white border-top-0 d-flex gap-2">
+                    <!-- Placeholder for Details -->
+                    <button class="btn btn-outline-secondary flex-grow-1" disabled>Details</button>
+    
+                    <!-- Enrollment Button -->
+                    <form sec:authorize="isAuthenticated()" 
+                        th:action="@{/enroll/{id}(id=${course.id})}" method="post" class="flex-grow-1">
+                        <button type="submit" class="btn btn-primary w-100">Start Course</button>
+                    </form>
+    
+                    <!-- Redirect to Login if anonymous -->
+                    <a sec:authorize="isAnonymous()" href="/login" class="btn btn-primary flex-grow-1">Login to Start</a>
                 </div>
             </div>
         </div>
