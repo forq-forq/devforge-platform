@@ -40,8 +40,36 @@
                         By <span th:text="${course.author.fullName}">Author Name</span>
                     </p>
                 </div>
-                <div class="card-footer bg-white border-top-0">
-                    <a href="#" class="btn btn-outline-primary w-100">View Details</a>
+                <div class="card-footer bg-white border-top-0 d-flex gap-2">
+                    <!-- Placeholder for Details -->
+                    <button class="btn btn-outline-secondary flex-grow-1" disabled>Details</button>
+    
+                    <!-- Section for Authorized -->
+                    <th:block sec:authorize="isAuthenticated()">
+                        
+                        <!-- User - Admin or Teacher -->
+                        <button sec:authorize="hasAnyRole('TEACHER', 'ADMIN')" 
+                                class="btn btn-secondary w-100" disabled>Preview Only</button>
+
+                        <!-- User - Student -->
+                        <th:block sec:authorize="hasRole('STUDENT')">
+                            
+                            <!-- If enrolled -->
+                            <a th:if="${enrolledCourseIds.contains(course.id)}"
+                               href="/my-learning" 
+                               class="btn btn-success w-100">Continue</a>
+
+                            <!-- If not enrolled -->
+                            <form th:unless="${enrolledCourseIds.contains(course.id)}"
+                                  th:action="@{/enroll/{id}(id=${course.id})}" method="post" class="flex-grow-1">
+                                <button type="submit" class="btn btn-primary w-100">Start Course</button>
+                            </form>
+                        
+                        </th:block>
+                    </th:block>
+    
+                    <!-- Section for guests (Redirect to Login) -->
+                    <a sec:authorize="isAnonymous()" href="/login" class="btn btn-primary flex-grow-1">Login to Start</a>
                 </div>
             </div>
         </div>

@@ -35,4 +35,11 @@ public interface CourseService {
      * Checks if the acting user is the owner of the course.
      */
     void updateStatus(Long courseId, com.devforge.platform.course.domain.CourseStatus status, User actor);
+
+    /**
+     * Retrieves a published course by its ID.
+     * Used by Enrollment module to verify the course before joining.
+     * @throws IllegalArgumentException if course not found or not published.
+     */
+    Course getPublishedCourseById(Long courseId);
 }
