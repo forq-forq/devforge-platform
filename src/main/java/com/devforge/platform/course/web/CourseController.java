@@ -5,6 +5,7 @@ import com.devforge.platform.course.web.dto.CreateCourseRequest;
 import com.devforge.platform.enrollment.service.EnrollmentService;
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
+import com.devforge.platform.course.service.LessonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +31,7 @@ public class CourseController {
     private final CourseService courseService;
     private final UserService userService;
     private final EnrollmentService enrollmentService; 
+    private final LessonService lessonService;
 
     // CONSTANTS for views
     private static final String LIST_VIEW = "course/list";
@@ -109,5 +111,41 @@ public class CourseController {
         User author = userService.getByEmail(principal.getName());
         courseService.updateStatus(id, com.devforge.platform.course.domain.CourseStatus.PUBLISHED, author);
         return "redirect:/courses/my?published";
+    }
+
+    /**
+     * Show form to add a lesson to a course.
+     */
+    @GetMapping("/{courseId}/lessons/create")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String addLessonPage(@PathVariable Long courseId, Model model, Principal principal) {
+        // TODO: Ideally, we need to check whether the principal is the course author 
+        // so as not to show the form to another teacher. For now, let's leave the check in the Service layer (POST).
+        
+        var request = new com.devforge.platform.course.web.dto.CreateLessonRequest("", "", "", 1);
+        model.addAttribute("lesson", request);
+        model.addAttribute("courseId", courseId);
+        return "course/create-lesson";
+    }
+
+    /**
+     * Process adding a lesson.
+     */
+    @PostMapping("/{courseId}/lessons")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String addLessonProcess(@PathVariable Long courseId,
+                                   @Valid @ModelAttribute("lesson") com.devforge.platform.course.web.dto.CreateLessonRequest request,
+                                   BindingResult bindingResult,
+                                   Principal principal,
+                                   Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("courseId", courseId);
+            return "course/create-lesson";
+        }
+
+        User author = userService.getByEmail(principal.getName());
+        lessonService.createLesson(courseId, request, author);
+
+        return "redirect:/courses/my?lessonAdded";
     }
 }
