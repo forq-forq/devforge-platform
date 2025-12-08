@@ -43,11 +43,18 @@
                     </td>
                     <td th:text="${#temporals.format(course.createdAt, 'dd-MM-yyyy')}">01-01-2025</td>
                     <td>
-                        <!-- Кнопка Publish только для черновиков -->
+                        <!-- Publish Button -->
                         <form th:if="${course.status.name() == 'DRAFT'}" 
                               th:action="@{/courses/{id}/publish(id=${course.id})}" method="post" style="display:inline;">
                             <button type="submit" class="btn btn-sm btn-outline-success">🚀 Publish</button>
                         </form>
+                        
+                        <!-- Lesson Button -->
+                         <a th:href="@{/courses/{id}/lessons/create(id=${course.id})}" 
+                            class="btn btn-sm btn-outline-primary ms-1">
+                            + Lesson
+                        </a>
+
                         <span th:if="${course.status.name() == 'PUBLISHED'}" class="text-muted small">Live</span>
                     </td>
                 </tr>

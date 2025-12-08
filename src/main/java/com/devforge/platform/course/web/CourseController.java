@@ -6,6 +6,7 @@ import com.devforge.platform.enrollment.service.EnrollmentService;
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
 import com.devforge.platform.course.service.LessonService;
+import com.devforge.platform.course.web.dto.CreateLessonRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,6 +38,7 @@ public class CourseController {
     private static final String LIST_VIEW = "course/list";
     private static final String CREATE_VIEW = "course/create";
     private static final String MY_COURSES_VIEW = "course/my-courses";
+    private static final String CREATE_LESSON_VIEW = "course/create-lesson";
 
     /**
      * Lists all published courses (Public catalog).
@@ -122,10 +124,12 @@ public class CourseController {
         // TODO: Ideally, we need to check whether the principal is the course author 
         // so as not to show the form to another teacher. For now, let's leave the check in the Service layer (POST).
         
-        var request = new com.devforge.platform.course.web.dto.CreateLessonRequest("", "", "", 1);
+        var request = new CreateLessonRequest("", "", "", 1);
+
         model.addAttribute("lesson", request);
         model.addAttribute("courseId", courseId);
-        return "course/create-lesson";
+
+        return CREATE_LESSON_VIEW;
     }
 
     /**
@@ -134,17 +138,21 @@ public class CourseController {
     @PostMapping("/{courseId}/lessons")
     @PreAuthorize("hasRole('TEACHER')")
     public String addLessonProcess(@PathVariable Long courseId,
-                                   @Valid @ModelAttribute("lesson") com.devforge.platform.course.web.dto.CreateLessonRequest request,
+                                   @Valid @ModelAttribute("lesson") CreateLessonRequest request,
                                    BindingResult bindingResult,
                                    Principal principal,
                                    Model model) {
         if (bindingResult.hasErrors()) {
             model.addAttribute("courseId", courseId);
-            return "course/create-lesson";
+            return CREATE_LESSON_VIEW;
         }
 
         User author = userService.getByEmail(principal.getName());
-        lessonService.createLesson(courseId, request, author);
+        try {
+            lessonService.createLesson(courseId, request, author);
+        } catch (org.springframework.security.access.AccessDeniedException e) {
+            return "error/403";
+        }
 
         return "redirect:/courses/my?lessonAdded";
     }
