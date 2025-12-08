@@ -18,4 +18,10 @@ public interface LessonService {
      * Retrieves curriculum for a course.
      */
     List<Lesson> getLessonsByCourseId(Long courseId);
+
+    /**
+     * Retrieves a single lesson by ID.
+     * @throws IllegalArgumentException if not found.
+     */
+    Lesson getLessonById(Long lessonId);
 }

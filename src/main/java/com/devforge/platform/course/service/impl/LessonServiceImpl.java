@@ -50,4 +50,10 @@ public class LessonServiceImpl implements LessonService {
     public List<Lesson> getLessonsByCourseId(Long courseId) {
         return lessonRepository.findAllByCourseIdOrderByOrderIndexAsc(courseId);
     }
+
+    @Override
+    public Lesson getLessonById(Long lessonId) {
+        return lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson not found with id: " + lessonId));
+    }
 }

@@ -56,8 +56,8 @@
                             
                             <!-- If enrolled -->
                             <a th:if="${enrolledCourseIds.contains(course.id)}"
-                               href="/my-learning" 
-                               class="btn btn-success w-100">Continue</a>
+                                th:href="@{/learn/{id}(id=${course.id})}" 
+                                class="btn btn-success w-100">Continue</a>
 
                             <!-- If not enrolled -->
                             <form th:unless="${enrolledCourseIds.contains(course.id)}"

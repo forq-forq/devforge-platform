@@ -46,7 +46,10 @@
                         </progress>
                     </div>
 
-                    <button class="btn btn-primary w-100" disabled>Continue Learning (Soon)</button>
+                    <a th:href="@{/learn/{id}(id=${enrollment.course.id})}" 
+                        class="btn btn-primary w-100">
+                        Continue Learning
+                    </a>
                 </div>
             </div>
         </div>
