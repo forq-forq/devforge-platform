@@ -15,7 +15,7 @@
                     <a class="nav-link" href="/courses">Catalog</a>
                 </li>
                 <!-- Only Authorized-visible -->
-                <li class="nav-item" sec:authorize="isAuthenticated()">
+                <li class="nav-item" sec:authorize="hasRole('STUDENT')">
                     <a class="nav-link" href="/my-learning">My Learning</a>
                 </li>
                 <!-- Only Teacher-visible -->

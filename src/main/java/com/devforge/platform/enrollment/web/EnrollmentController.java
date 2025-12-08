@@ -15,6 +15,7 @@ import java.security.Principal;
 
 /**
  * Controller for student enrollment actions.
+ * Handles course joining and tracking.
  */
 @Controller
 @RequiredArgsConstructor
@@ -28,9 +29,13 @@ public class EnrollmentController {
     /**
      * Handles the "Start Course" action.
      * Redirects to the My Learning dashboard upon success.
+     *
+     * @param courseId  the ID of the course to join
+     * @param principal the currently logged-in user
+     * @return redirect string to dashboard
      */
     @PostMapping("/enroll/{courseId}")
-    @PreAuthorize("isAuthenticated()") // Any logged-in user can enroll
+    @PreAuthorize("hasRole('STUDENT')")
     public String enrollInCourse(@PathVariable Long courseId, Principal principal) {
         User student = userService.getByEmail(principal.getName());
         enrollmentService.enroll(courseId, student);
@@ -40,9 +45,13 @@ public class EnrollmentController {
 
     /**
      * Displays the list of courses the student is enrolled in.
+     *
+     * @param model     UI model
+     * @param principal current user
+     * @return the my-learning view template
      */
     @GetMapping("/my-learning")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasRole('STUDENT')") 
     public String myLearningPage(Model model, Principal principal) {
         User student = userService.getByEmail(principal.getName());
         model.addAttribute("enrollments", enrollmentService.getStudentEnrollments(student));

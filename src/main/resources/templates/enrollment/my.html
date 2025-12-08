@@ -40,10 +40,10 @@
                             <span>Progress</span>
                             <span th:text="${enrollment.progress} + '%'">0%</span>
                         </div>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-success" role="progressbar" 
-                                 th:style="'width: ' + ${enrollment.progress} + '%'"></div>
-                        </div>
+                        <progress th:id="'prog-' + ${enrollment.id}" class="w-100" 
+                                  th:value="${enrollment.progress}" max="100">
+                            <span th:text="${enrollment.progress} + '%'"></span>
+                        </progress>
                     </div>
 
                     <button class="btn btn-primary w-100" disabled>Continue Learning (Soon)</button>
