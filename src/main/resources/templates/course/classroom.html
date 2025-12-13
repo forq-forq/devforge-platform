@@ -3,6 +3,9 @@
 <head>
     <title th:text="${currentLesson.title} + ' | ' + ${course.title}">Lesson | DevForge</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
     <style>
         body { overflow-x: hidden; }
         .sidebar { height: 100vh; overflow-y: auto; border-right: 1px solid #dee2e6; }
@@ -12,6 +15,10 @@
         .content-area { padding: 40px; }
         .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin-bottom: 20px; border-radius: 8px;}
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        .lesson-content img { max-width: 100%; height: auto; border-radius: 5px; margin: 10px 0; }
+        .lesson-content pre { border-radius: 6px; }
+        .lesson-content h2 { margin-top: 1.5rem; }
     </style>
 </head>
 <body>
@@ -69,8 +76,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <!-- th:utext is dangerous for XSS, but for Teacher content (Trusted) it allows HTML formatting -->
-                    <div th:utext="${#strings.replace(currentLesson.content, '
-', '<br/>')}">
+                    <div th:utext="${htmlContent}">
                         Lesson content...
                     </div>
                 </div>
@@ -81,5 +87,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 </body>
 </html>

@@ -7,6 +7,7 @@ import com.devforge.platform.course.service.LessonService;
 import com.devforge.platform.enrollment.repository.EnrollmentRepository;
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
+import com.devforge.platform.common.service.MarkdownService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -30,6 +31,7 @@ public class ClassroomController {
     private final LessonService lessonService;
     private final UserService userService;
     private final EnrollmentRepository enrollmentRepository; // Direct repo access for check (Clean enough for MVP)
+    private final MarkdownService markdownService;
 
     /**
      * Entry point for learning. Redirects to the first lesson of the course.
@@ -78,10 +80,14 @@ public class ClassroomController {
             throw new IllegalArgumentException("Lesson does not belong to this course");
         }
 
+        // Render in markdown
+        String htmlContent = markdownService.renderHtml(currentLesson.getContent());
+
         // 3. Populate Model
         model.addAttribute("course", course);
         model.addAttribute("lessons", lessons);       // For Sidebar
         model.addAttribute("currentLesson", currentLesson); // For Main Content
+        model.addAttribute("htmlContent", htmlContent);
         
         // Find next/prev lesson IDs for navigation buttons
         int currentIndex = lessons.indexOf(currentLesson);
