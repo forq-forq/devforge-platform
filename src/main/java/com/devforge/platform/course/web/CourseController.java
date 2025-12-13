@@ -9,6 +9,9 @@ import com.devforge.platform.course.service.LessonService;
 import com.devforge.platform.course.web.dto.CreateLessonRequest;
 import com.devforge.platform.practice.service.PracticeManagementService;
 import com.devforge.platform.practice.web.dto.CreateProblemRequest;
+import com.devforge.platform.quiz.service.QuizManagementService;
+import com.devforge.platform.quiz.web.dto.CreateQuizRequest;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,6 +39,7 @@ public class CourseController {
     private final EnrollmentService enrollmentService; 
     private final LessonService lessonService;
     private final PracticeManagementService practiceManagementService;
+    private final QuizManagementService quizManagementService;
 
     // CONSTANTS for views
     private static final String LIST_VIEW = "course/list";
@@ -132,6 +136,11 @@ public class CourseController {
             model.addAttribute("problem", new CreateProblemRequest()); 
             model.addAttribute("courseId", courseId);
             return "course/create-practice";
+        } else if ("QUIZ".equals(type)) {
+            // Create quiz
+            model.addAttribute("quiz", new CreateQuizRequest());
+            model.addAttribute("courseId", courseId);
+            return "course/create-quiz";
         } else {
             // Create lecture
             var request = new CreateLessonRequest("", "", "", 1);
@@ -189,5 +198,18 @@ public class CourseController {
         practiceManagementService.createPracticeLesson(courseId, request, teacher);
         
         return "redirect:/courses/my?practiceCreated";
+    }
+
+    /**
+     * Create quiz
+     */
+    @PostMapping("/{courseId}/lessons/create/quiz")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String createQuizProcess(@PathVariable Long courseId,
+                                    @ModelAttribute("quiz") CreateQuizRequest request,
+                                    Principal principal) {
+        User teacher = userService.getByEmail(principal.getName());
+        quizManagementService.createQuiz(courseId, request, teacher);
+        return "redirect:/courses/my?quizCreated";
     }
 }
