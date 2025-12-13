@@ -26,7 +26,7 @@
 <div class="container-fluid">
     <div class="row">
         
-        <!-- Sidebar: Curriculum -->
+        <!-- Curriculum -->
         <div class="col-md-3 p-0 sidebar bg-white">
             <div class="p-3 border-bottom bg-light">
                 <a href="/my-learning" class="text-decoration-none text-secondary mb-2 d-block">&larr; Back to Dashboard</a>
@@ -74,7 +74,7 @@
                 </div>
             </div>
 
-            <!-- === TYPE: LECTURE === -->
+            <!-- === LECTURE === -->
             <div th:if="${currentLesson.type.name() == 'LECTURE'}">
                 <div th:if="${currentLesson.videoUrl}" class="video-container shadow-sm">
                     <iframe th:src="${currentLesson.videoUrl}" frameborder="0" allowfullscreen></iframe>
@@ -86,23 +86,36 @@
                 </div>
             </div>
 
-            <!-- === TYPE: PRACTICE === -->
+            <!-- === PRACTICE === -->
             <div th:if="${currentLesson.type.name() == 'PRACTICE'}" class="h-100">
-                <div class="alert alert-info">
+                
+                <!-- Task Description (Task text) -->
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-header bg-white fw-bold">
+                        📋 Task Description
+                    </div>
+                    <div class="card-body lesson-content">
+                        <div th:utext="${htmlContent}"></div>
+                    </div>
+                </div>
+
+                <!-- Editor Instructions -->
+                <div class="alert alert-info py-2">
                     <small>Write your Java code below. The class name must match the problem definition.</small>
                 </div>
 
                 <!-- Code Editor Container -->
                 <div id="editor-container" style="height: 500px; border: 1px solid #ccc;"></div>
 
-                <div class="mt-3 d-flex justify-content-between align-items-center">
+                <!-- Controls -->
+                <div class="mt-3 d-flex justify-content-between align-items-center mb-5">
                     <div id="result-message" class="fw-bold"></div>
                     <button id="runBtn" class="btn btn-success px-4" onclick="runCode()">Run Code ▶</button>
                 </div>
 
-                <!-- Hidden inputs to store IDs for JS -->
+                <!-- Hidden inputs -->
                 <input type="hidden" id="lessonId" th:value="${currentLesson.id}">
-                <input type="hidden" id="starterCode" th:value="${problem.starterCode}">
+                <input type="hidden" id="starterCode" th:value="${problem != null ? problem.starterCode : ''}">
             </div>
 
         </div>

@@ -7,6 +7,8 @@ import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
 import com.devforge.platform.course.service.LessonService;
 import com.devforge.platform.course.web.dto.CreateLessonRequest;
+import com.devforge.platform.practice.service.PracticeManagementService;
+import com.devforge.platform.practice.web.dto.CreateProblemRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,6 +35,7 @@ public class CourseController {
     private final UserService userService;
     private final EnrollmentService enrollmentService; 
     private final LessonService lessonService;
+    private final PracticeManagementService practiceManagementService;
 
     // CONSTANTS for views
     private static final String LIST_VIEW = "course/list";
@@ -120,16 +123,22 @@ public class CourseController {
      */
     @GetMapping("/{courseId}/lessons/create")
     @PreAuthorize("hasRole('TEACHER')")
-    public String addLessonPage(@PathVariable Long courseId, Model model, Principal principal) {
-        // TODO: Ideally, we need to check whether the principal is the course author 
-        // so as not to show the form to another teacher. For now, let's leave the check in the Service layer (POST).
+    public String addLessonPage(@PathVariable Long courseId, 
+                                @RequestParam(defaultValue = "LECTURE") String type,
+                                Model model) {
         
-        var request = new CreateLessonRequest("", "", "", 1);
-
-        model.addAttribute("lesson", request);
-        model.addAttribute("courseId", courseId);
-
-        return CREATE_LESSON_VIEW;
+        if ("PRACTICE".equals(type)) {
+            // Create practice
+            model.addAttribute("problem", new CreateProblemRequest()); 
+            model.addAttribute("courseId", courseId);
+            return "course/create-practice";
+        } else {
+            // Create lecture
+            var request = new CreateLessonRequest("", "", "", 1);
+            model.addAttribute("lesson", request);
+            model.addAttribute("courseId", courseId);
+            return CREATE_LESSON_VIEW;
+        }
     }
 
     /**
@@ -155,5 +164,30 @@ public class CourseController {
         }
 
         return "redirect:/courses/my?lessonAdded";
+    }
+
+    /**
+     * Choose a lesson datatype (LECTURE/PRACTICE/QUIZ)
+     */
+    @GetMapping("/{courseId}/lessons/choose-type")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String chooseLessonType(@PathVariable Long courseId, Model model) {
+        model.addAttribute("courseId", courseId);
+        return "course/lesson-type-chooser";
+    }
+
+    /**
+     * Crate practice lesson
+     */
+    @PostMapping("/{courseId}/lessons/create/practice")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String createPracticeProcess(@PathVariable Long courseId,
+                                        @ModelAttribute("problem") CreateProblemRequest request,
+                                        Principal principal) {
+        
+        User teacher = userService.getByEmail(principal.getName());
+        practiceManagementService.createPracticeLesson(courseId, request, teacher);
+        
+        return "redirect:/courses/my?practiceCreated";
     }
 }

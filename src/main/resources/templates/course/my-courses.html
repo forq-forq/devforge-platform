@@ -49,8 +49,8 @@
                             <button type="submit" class="btn btn-sm btn-outline-success">🚀 Publish</button>
                         </form>
                         
-                        <!-- Lesson Button -->
-                         <a th:href="@{/courses/{id}/lessons/create(id=${course.id})}" 
+                        <!-- Lesson Button (choosing type) -->
+                        <a th:href="@{/courses/{id}/lessons/choose-type(id=${course.id})}" 
                             class="btn btn-sm btn-outline-primary ms-1">
                             + Lesson
                         </a>
