@@ -1,5 +1,6 @@
 package com.devforge.platform.course.web;
 
+import com.devforge.platform.course.domain.Course;
 import com.devforge.platform.course.service.CourseService;
 import com.devforge.platform.course.web.dto.CreateCourseRequest;
 import com.devforge.platform.enrollment.service.EnrollmentService;
@@ -14,6 +15,8 @@ import com.devforge.platform.quiz.web.dto.CreateQuizRequest;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -40,6 +43,7 @@ public class CourseController {
     private final LessonService lessonService;
     private final PracticeManagementService practiceManagementService;
     private final QuizManagementService quizManagementService;
+    
 
     // CONSTANTS for views
     private static final String LIST_VIEW = "course/list";
@@ -211,5 +215,93 @@ public class CourseController {
         User teacher = userService.getByEmail(principal.getName());
         quizManagementService.createQuiz(courseId, request, teacher);
         return "redirect:/courses/my?quizCreated";
+    }
+
+    @GetMapping("/{id}")
+    public String courseDetails(@PathVariable Long id, Model model, Principal principal) {
+        Course course = courseService.getCourseById(id);
+        
+        // Check who observing
+        boolean isAuthor = false;
+        boolean isEnrolled = false;
+
+         if (principal != null) {
+            User user = userService.getByEmail(principal.getName());
+            isAuthor = course.getAuthor().getId().equals(user.getId());
+            
+            // Check if student enrolled
+            if (!isAuthor && user.getRole() == com.devforge.platform.user.domain.Role.STUDENT) {
+                isEnrolled = enrollmentService.getStudentEnrollments(user).stream()
+                        .anyMatch(e -> e.getCourse().getId().equals(id));
+            }
+        }
+
+        // If course is in draft and not-author observing it -> 404
+        if (course.getStatus() == com.devforge.platform.course.domain.CourseStatus.DRAFT && !isAuthor) {
+            throw new org.springframework.security.access.AccessDeniedException("Course not published");
+        }
+
+        // Uppload lessons
+        model.addAttribute("lessons", lessonService.getLessonsByCourseId(id)); 
+        model.addAttribute("course", course);
+        model.addAttribute("isAuthor", isAuthor);
+        model.addAttribute("isEnrolled", isEnrolled);
+        
+        return "course/details";
+    }
+
+    // UNPUBLISH Form
+    @PostMapping("/{id}/unpublish")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String unpublishCourse(@PathVariable Long id, Principal principal) {
+        User author = userService.getByEmail(principal.getName());
+        courseService.updateStatus(id, com.devforge.platform.course.domain.CourseStatus.DRAFT, author);
+        // Go to details page in case to start editing imediately.
+        return "redirect:/courses/" + id; 
+    }
+
+    // EDIT Form
+    @GetMapping("/{id}/edit")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String editCoursePage(@PathVariable Long id, Model model, Principal principal) {
+        User author = userService.getByEmail(principal.getName());
+        Course course = courseService.getCoursesByAuthor(author).stream()
+                .filter(c -> c.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new AccessDeniedException("Access denied"));
+
+        if (course.getStatus() != com.devforge.platform.course.domain.CourseStatus.DRAFT) {
+            return "redirect:/courses/" + id + "?error=must_unpublish";
+        }
+
+        // Use DTO for creating, because the fields are same
+        var request = new CreateCourseRequest(course.getTitle(), course.getDescription(), course.getLevel());
+        
+        model.addAttribute("course", request);
+        model.addAttribute("courseId", id);
+        return "course/edit";
+    }
+
+    // Process Edit
+    @PostMapping("/{id}/edit")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String editCourseProcess(@PathVariable Long id,
+                                    @Valid @ModelAttribute("course") CreateCourseRequest request,
+                                    BindingResult bindingResult,
+                                    Principal principal,
+                                    Model model) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("courseId", id);
+            return "course/edit";
+        }
+
+        User author = userService.getByEmail(principal.getName());
+        try {
+            courseService.updateCourseInfo(id, request, author);
+        } catch (IllegalStateException e) {
+            return "redirect:/courses/" + id + "?error=published";
+        }
+        
+        return "redirect:/courses/" + id + "?updated";
     }
 }

@@ -27,12 +27,15 @@
     <div class="row">
         
         <!-- Curriculum -->
-        <div class="col-md-3 p-0 sidebar bg-white">
+        <div class="col-md-3 p-0 sidebar bg-white">     
             <div class="p-3 border-bottom bg-light">
-                <a href="/my-learning" class="text-decoration-none text-secondary mb-2 d-block">&larr; Back to Dashboard</a>
+                <!-- BACK TO DASHBOARD Button -->
+                <a th:href="${isAuthor} ? @{/courses/{id}(id=${course.id})} : @{/my-learning}" 
+                    class="text-decoration-none text-secondary mb-2 d-block">
+                    &larr; <span th:text="${isAuthor ? 'Back to Course Manager' : 'Back to Dashboard'}">Back</span>
+                </a>
                 <h5 class="m-0 text-truncate" th:text="${course.title}">Course Name</h5>
             </div>
-            
             <div class="list-group list-group-flush">
                 <a th:each="lesson, iter : ${lessons}"
                    th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${lesson.id})}"

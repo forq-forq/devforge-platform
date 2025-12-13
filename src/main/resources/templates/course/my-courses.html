@@ -30,7 +30,7 @@
                     <th>Actions</th>
                 </tr>
                 </thead>
-                <tbody>
+                <tbody>   
                 <tr th:each="course : ${courses}">
                     <td class="fw-bold" th:text="${course.title}">Java Basics</td>
                     <td>
@@ -43,19 +43,10 @@
                     </td>
                     <td th:text="${#temporals.format(course.createdAt, 'dd-MM-yyyy')}">01-01-2025</td>
                     <td>
-                        <!-- Publish Button -->
-                        <form th:if="${course.status.name() == 'DRAFT'}" 
-                              th:action="@{/courses/{id}/publish(id=${course.id})}" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-outline-success">🚀 Publish</button>
-                        </form>
-                        
-                        <!-- Lesson Button (choosing type) -->
-                        <a th:href="@{/courses/{id}/lessons/choose-type(id=${course.id})}" 
-                            class="btn btn-sm btn-outline-primary ms-1">
-                            + Lesson
+                        <!-- MANAGE Button -->
+                        <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-sm btn-primary">
+                            ⚙ Manage
                         </a>
-
-                        <span th:if="${course.status.name() == 'PUBLISHED'}" class="text-muted small">Live</span>
                     </td>
                 </tr>
                 <tr th:if="${#lists.isEmpty(courses)}">

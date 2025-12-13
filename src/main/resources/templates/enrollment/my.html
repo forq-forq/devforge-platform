@@ -23,33 +23,46 @@
         <div class="col-md-6 mb-4" th:each="enrollment : ${enrollments}">
             <div class="card h-100 shadow-sm border-0 bg-light">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge bg-primary" th:text="${enrollment.course.level}">BEGINNER</span>
-                        <span class="badge bg-secondary" th:text="${enrollment.status}">ACTIVE</span>
-                    </div>
-                    
-                    <h4 class="card-title mt-2" th:text="${enrollment.course.title}">Course Title</h4>
-                    
-                    <p class="text-muted small mb-3">
-                        Enrolled on <span th:text="${#temporals.format(enrollment.enrolledAt, 'dd MMM yyyy')}">Date</span>
-                    </p>
-
-                    <!-- Progress Bar (Static for MVP) -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>Progress</span>
-                            <span th:text="${enrollment.progress} + '%'">0%</span>
+                    <div th:with="isAvailable=${enrollment.course.status.name() == 'PUBLISHED'}">
+                        
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-primary" th:text="${enrollment.course.level}">BEGINNER</span>
+                            
+                            <!-- ENROLLMENT status (Active/Completed) -->
+                            <span th:if="${isAvailable}" class="badge bg-secondary" th:text="${enrollment.status}">ACTIVE</span>
+                            
+                            <!-- If course in DRAFT -->
+                            <span th:unless="${isAvailable}" class="badge bg-warning text-dark">MAINTENANCE</span>
                         </div>
-                        <progress th:id="'prog-' + ${enrollment.id}" class="w-100" 
-                                  th:value="${enrollment.progress}" max="100">
-                            <span th:text="${enrollment.progress} + '%'"></span>
-                        </progress>
+                        
+                        <h4 class="card-title mt-2" th:text="${enrollment.course.title}">Course Title</h4>
+                        
+                        <p class="text-muted small mb-3">
+                            Enrolled on <span th:text="${#temporals.format(enrollment.enrolledAt, 'dd MMM yyyy')}">Date</span>
+                        </p>
+    
+                        <!-- Progress Bar -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>Progress</span>
+                                <span th:text="${enrollment.progress} + '%'">0%</span>
+                            </div>
+                            <progress class="w-100" th:value="${enrollment.progress}" max="100"></progress>
+                        </div>
+    
+                        <!-- CONTINUE Button (Active only if course not in DRAFT) -->
+                        <a th:if="${isAvailable}" 
+                           th:href="@{/learn/{id}(id=${enrollment.course.id})}" 
+                           class="btn btn-primary w-100">
+                            Continue Learning
+                        </a>
+                        
+                        <!-- Blocked Button -->
+                        <button th:unless="${isAvailable}" 
+                                class="btn btn-secondary w-100" disabled>
+                            Temporarily Unavailable
+                        </button>
                     </div>
-
-                    <a th:href="@{/learn/{id}(id=${enrollment.course.id})}" 
-                        class="btn btn-primary w-100">
-                        Continue Learning
-                    </a>
                 </div>
             </div>
         </div>

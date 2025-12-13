@@ -2,6 +2,7 @@ package com.devforge.platform.course.web;
 
 import com.devforge.platform.course.domain.Course;
 import com.devforge.platform.course.domain.Lesson;
+import com.devforge.platform.course.repository.CourseRepository;
 import com.devforge.platform.course.service.CourseService;
 import com.devforge.platform.course.service.LessonService;
 import com.devforge.platform.enrollment.repository.EnrollmentRepository;
@@ -40,17 +41,18 @@ public class ClassroomController {
     private final EnrollmentService enrollmentService;
     private final ProblemRepository problemRepository;
     private final QuizQuestionRepository quizQuestionRepository;
+    private final CourseRepository courseRepository;
 
     /**
      * Entry point for learning. Redirects to the first lesson of the course.
      */
     @GetMapping("/{courseId}")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     public String openClassroom(@PathVariable Long courseId, Principal principal) {
         User student = userService.getByEmail(principal.getName());
 
         // 1. Security: Check enrollment
-        checkEnrollment(student, courseId);
+        checkAccess(student, courseId);
 
         // 2. Find curriculum
         List<Lesson> lessons = lessonService.getLessonsByCourseId(courseId);
@@ -68,15 +70,15 @@ public class ClassroomController {
      * Displays a specific lesson.
      */
     @GetMapping("/{courseId}/lecture/{lessonId}")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     public String viewLesson(@PathVariable Long courseId, 
                              @PathVariable Long lessonId, 
                              Model model, 
                              Principal principal) {
-        User student = userService.getByEmail(principal.getName());
+        User user = userService.getByEmail(principal.getName());
 
         // 1. Security Check
-        checkEnrollment(student, courseId);
+        checkAccess(user, courseId);
 
         // 2. Load Data
         Course course = courseService.getPublishedCourseById(courseId);
@@ -102,11 +104,14 @@ public class ClassroomController {
             model.addAttribute("quizQuestions", quizQuestions);
         }
 
+        boolean isAuthor = course.getAuthor().getId().equals(user.getId());
+
         // 3. Populate Model
         model.addAttribute("course", course);
         model.addAttribute("lessons", lessons);       // For Sidebar
         model.addAttribute("currentLesson", currentLesson); // For Main Content
         model.addAttribute("htmlContent", htmlContent);
+        model.addAttribute("isAuthor", isAuthor);
         
         // Find next/prev lesson IDs for navigation buttons
         int currentIndex = lessons.indexOf(currentLesson);
@@ -117,15 +122,30 @@ public class ClassroomController {
             model.addAttribute("prevLessonId", lessons.get(currentIndex - 1).getId());
         }
 
-        List<Long> completedLessonIds = enrollmentService.getCompletedLessonIds(student, courseId);
+        List<Long> completedLessonIds = enrollmentService.getCompletedLessonIds(user, courseId);
         model.addAttribute("completedLessonIds", completedLessonIds);
 
         return "course/classroom";
     }
 
-    private void checkEnrollment(User student, Long courseId) {
-        if (!enrollmentRepository.existsByUserIdAndCourseId(student.getId(), courseId)) {
-            log.warn("Access denied: User {} is not enrolled in course {}", student.getEmail(), courseId);
+    private void checkAccess(User user, Long courseId) {
+        // Load course to observe author
+        var course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        // If author - has access always
+        if (course.getAuthor().getId().equals(user.getId())) {
+            return; 
+        }
+
+        // If not author - course must be published
+        if (course.getStatus() != com.devforge.platform.course.domain.CourseStatus.PUBLISHED) {
+            throw new AccessDeniedException("Course is not available.");
+        }
+
+        // User must be enrolled
+        if (!enrollmentRepository.existsByUserIdAndCourseId(user.getId(), courseId)) {
+            log.warn("Access denied: User {} is not enrolled in course {}", user.getEmail(), courseId);
             throw new AccessDeniedException("You must be enrolled to view this course.");
         }
     }

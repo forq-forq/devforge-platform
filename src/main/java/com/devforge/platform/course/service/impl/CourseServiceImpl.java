@@ -8,6 +8,8 @@ import com.devforge.platform.course.web.dto.CreateCourseRequest;
 import com.devforge.platform.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,5 +69,32 @@ public class CourseServiceImpl implements CourseService {
         return courseRepository.findById(courseId)
                 .filter(c -> c.getStatus() == CourseStatus.PUBLISHED)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found or not available"));
+    }
+
+    @Override
+    public Course getCourseById(Long courseId) {
+        return courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+    }
+
+    @Override
+    @Transactional
+    public void updateCourseInfo(Long courseId, CreateCourseRequest request, User actor) {
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+
+        if (!course.getAuthor().getId().equals(actor.getId())) {
+            throw new AccessDeniedException("Not authorized");
+        }
+
+        // Allows to edit course info only in DRAFT
+        if (course.getStatus() != CourseStatus.DRAFT) {
+            throw new IllegalStateException("Cannot edit a published course. Unpublish it first.");
+        }
+
+        course.setTitle(request.title());
+        course.setDescription(request.description());
+        course.setLevel(request.level());
+        courseRepository.save(course); 
     }
 }

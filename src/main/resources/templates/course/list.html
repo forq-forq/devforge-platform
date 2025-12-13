@@ -39,38 +39,33 @@
                     <p class="small text-secondary mb-3">
                         By <span th:text="${course.author.fullName}">Author Name</span>
                     </p>
-                </div>
-                <div class="card-footer bg-white border-top-0 d-flex gap-2">
-                    <!-- Placeholder for Details -->
-                    <button class="btn btn-outline-secondary flex-grow-1" disabled>Details</button>
-    
-                    <!-- Section for Authorized -->
-                    <th:block sec:authorize="isAuthenticated()">
-                        
-                        <!-- User - Admin or Teacher -->
-                        <button sec:authorize="hasAnyRole('TEACHER', 'ADMIN')" 
-                                class="btn btn-secondary w-100" disabled>Preview Only</button>
+                </div>        
+                    <div class="card-footer bg-white border-top-0 d-flex gap-2">
+                        <!-- Button DETAILS lead to details -->
+                        <a th:href="@{/courses/{id}(id=${course.id})}" class="btn btn-outline-secondary flex-grow-1">Details</a>
 
-                        <!-- User - Student -->
-                        <th:block sec:authorize="hasRole('STUDENT')">
-                            
-                            <!-- If enrolled -->
-                            <a th:if="${enrolledCourseIds.contains(course.id)}"
-                                th:href="@{/learn/{id}(id=${course.id})}" 
-                                class="btn btn-success w-100">Continue</a>
+                        <!-- If student and enrolled -->
+                        <a sec:authorize="hasRole('STUDENT')" 
+                        th:if="${enrolledCourseIds.contains(course.id)}"
+                        th:href="@{/learn/{id}(id=${course.id})}" 
+                        class="btn btn-success w-100">Continue</a>
 
-                            <!-- If not enrolled -->
-                            <form th:unless="${enrolledCourseIds.contains(course.id)}"
-                                  th:action="@{/enroll/{id}(id=${course.id})}" method="post" class="flex-grow-1">
-                                <button type="submit" class="btn btn-primary w-100">Start Course</button>
-                            </form>
+                        <!-- If student and NOT enrolled -->
+                        <form sec:authorize="hasRole('STUDENT')" 
+                            th:unless="${enrolledCourseIds.contains(course.id)}"
+                            th:action="@{/enroll/{id}(id=${course.id})}" method="post" class="flex-grow-1">
+                            <button type="submit" class="btn btn-primary w-100">Start</button>
+                        </form>
                         
-                        </th:block>
-                    </th:block>
-    
-                    <!-- Section for guests (Redirect to Login) -->
-                    <a sec:authorize="isAnonymous()" href="/login" class="btn btn-primary flex-grow-1">Login to Start</a>
-                </div>
+                        <!-- If author and it is his/her course -->
+                        <a sec:authorize="hasRole('TEACHER')" 
+                        th:if="${course.author.email == #authentication.name}"
+                        th:href="@{/courses/{id}(id=${course.id})}"
+                        class="btn btn-warning flex-grow-1">Manage</a>
+                        
+                        <!-- Guests -->
+                        <a sec:authorize="isAnonymous()" href="/login" class="btn btn-primary flex-grow-1">Login</a>
+                    </div>
             </div>
         </div>
 
