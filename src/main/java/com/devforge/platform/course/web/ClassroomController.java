@@ -1,5 +1,6 @@
 package com.devforge.platform.course.web;
 
+import com.devforge.platform.common.service.MarkdownService;
 import com.devforge.platform.course.domain.Course;
 import com.devforge.platform.course.domain.Lesson;
 import com.devforge.platform.course.repository.CourseRepository;
@@ -12,7 +13,6 @@ import com.devforge.platform.practice.repository.ProblemRepository;
 import com.devforge.platform.quiz.repository.QuizQuestionRepository;
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
-import com.devforge.platform.common.service.MarkdownService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
+import java.util.Collections;
 import java.util.List;
 
 @Controller
@@ -32,11 +33,10 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class ClassroomController {
-
-    private final CourseService courseService;
+    
     private final LessonService lessonService;
     private final UserService userService;
-    private final EnrollmentRepository enrollmentRepository; // Direct repo access for check (Clean enough for MVP)
+    private final EnrollmentRepository enrollmentRepository;
     private final MarkdownService markdownService;
     private final EnrollmentService enrollmentService;
     private final ProblemRepository problemRepository;
@@ -49,20 +49,16 @@ public class ClassroomController {
     @GetMapping("/{courseId}")
     @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     public String openClassroom(@PathVariable Long courseId, Principal principal) {
-        User student = userService.getByEmail(principal.getName());
+        User user = userService.getByEmail(principal.getName());
 
-        // 1. Security: Check enrollment
-        checkAccess(student, courseId);
+        checkAccess(user, courseId);
 
-        // 2. Find curriculum
         List<Lesson> lessons = lessonService.getLessonsByCourseId(courseId);
 
         if (lessons.isEmpty()) {
-            // Edge case: Course has no lessons yet
             return "redirect:/my-learning?error=empty_course";
         }
 
-        // 3. Redirect to the first lesson
         return "redirect:/learn/" + courseId + "/lecture/" + lessons.get(0).getId();
     }
 
@@ -81,26 +77,27 @@ public class ClassroomController {
         checkAccess(user, courseId);
 
         // 2. Load Data
-        Course course = courseService.getPublishedCourseById(courseId);
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new IllegalArgumentException("Course not found"));
+                
         List<Lesson> lessons = lessonService.getLessonsByCourseId(courseId);
         Lesson currentLesson = lessonService.getLessonById(lessonId);
 
-        // Validate that the lesson belongs to the course
         if (!currentLesson.getCourse().getId().equals(courseId)) {
             throw new IllegalArgumentException("Lesson does not belong to this course");
         }
 
-        // Render in markdown
+        // Render markdown
         String htmlContent = markdownService.renderHtml(currentLesson.getContent());
 
+        // Load specific data based on type
         if (currentLesson.getType() == com.devforge.platform.course.domain.LessonType.PRACTICE) {
             Problem problem = problemRepository.findByLessonId(lessonId).orElse(null);
             model.addAttribute("problem", problem);
         } 
-        if (currentLesson.getType() == com.devforge.platform.course.domain.LessonType.QUIZ) {
+        else if (currentLesson.getType() == com.devforge.platform.course.domain.LessonType.QUIZ) {
             List<com.devforge.platform.quiz.domain.QuizQuestion> quizQuestions = 
                     quizQuestionRepository.findAllByLessonId(lessonId);
-            
             model.addAttribute("quizQuestions", quizQuestions);
         }
 
@@ -108,12 +105,12 @@ public class ClassroomController {
 
         // 3. Populate Model
         model.addAttribute("course", course);
-        model.addAttribute("lessons", lessons);       // For Sidebar
-        model.addAttribute("currentLesson", currentLesson); // For Main Content
+        model.addAttribute("lessons", lessons);
+        model.addAttribute("currentLesson", currentLesson);
         model.addAttribute("htmlContent", htmlContent);
         model.addAttribute("isAuthor", isAuthor);
         
-        // Find next/prev lesson IDs for navigation buttons
+        // Navigation
         int currentIndex = lessons.indexOf(currentLesson);
         if (currentIndex < lessons.size() - 1) {
             model.addAttribute("nextLessonId", lessons.get(currentIndex + 1).getId());
@@ -122,18 +119,23 @@ public class ClassroomController {
             model.addAttribute("prevLessonId", lessons.get(currentIndex - 1).getId());
         }
 
-        List<Long> completedLessonIds = enrollmentService.getCompletedLessonIds(user, courseId);
+        // Get progress if user=Student
+        List<Long> completedLessonIds;
+        if (isAuthor) {
+            completedLessonIds = Collections.emptyList();
+        } else {
+            completedLessonIds = enrollmentService.getCompletedLessonIds(user, courseId);
+        }
         model.addAttribute("completedLessonIds", completedLessonIds);
 
         return "course/classroom";
     }
 
     private void checkAccess(User user, Long courseId) {
-        // Load course to observe author
         var course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found"));
 
-        // If author - has access always
+        // If author - has access always (Draft or Published)
         if (course.getAuthor().getId().equals(user.getId())) {
             return; 
         }
@@ -158,6 +160,7 @@ public class ClassroomController {
         User student = userService.getByEmail(principal.getName());
         enrollmentService.markLessonAsComplete(student, courseId, lessonId);
         
+        // Simple navigation logic
         List<Lesson> lessons = lessonService.getLessonsByCourseId(courseId);
         Long nextLessonId = null;
         for (int i = 0; i < lessons.size(); i++) {
