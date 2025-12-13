@@ -8,6 +8,7 @@ import com.devforge.platform.enrollment.repository.EnrollmentRepository;
 import com.devforge.platform.enrollment.service.EnrollmentService;
 import com.devforge.platform.practice.domain.Problem;
 import com.devforge.platform.practice.repository.ProblemRepository;
+import com.devforge.platform.quiz.repository.QuizQuestionRepository;
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
 import com.devforge.platform.common.service.MarkdownService;
@@ -38,6 +39,7 @@ public class ClassroomController {
     private final MarkdownService markdownService;
     private final EnrollmentService enrollmentService;
     private final ProblemRepository problemRepository;
+    private final QuizQuestionRepository quizQuestionRepository;
 
     /**
      * Entry point for learning. Redirects to the first lesson of the course.
@@ -92,6 +94,12 @@ public class ClassroomController {
         if (currentLesson.getType() == com.devforge.platform.course.domain.LessonType.PRACTICE) {
             Problem problem = problemRepository.findByLessonId(lessonId).orElse(null);
             model.addAttribute("problem", problem);
+        } 
+        if (currentLesson.getType() == com.devforge.platform.course.domain.LessonType.QUIZ) {
+            List<com.devforge.platform.quiz.domain.QuizQuestion> quizQuestions = 
+                    quizQuestionRepository.findAllByLessonId(lessonId);
+            
+            model.addAttribute("quizQuestions", quizQuestions);
         }
 
         // 3. Populate Model
