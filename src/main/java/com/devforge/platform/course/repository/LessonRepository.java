@@ -16,4 +16,12 @@ public interface LessonRepository extends JpaRepository<Lesson, Long> {
      * @return List of ordered lessons
      */
     List<Lesson> findAllByCourseIdOrderByOrderIndexAsc(Long courseId);
+
+    /**
+     * Calculate the total number of lessons in course.
+     * 
+     * @param courseId ID of the course
+     * @return long integer of total lessons in course.
+     */
+    long countByCourseId(long courseId);
 }

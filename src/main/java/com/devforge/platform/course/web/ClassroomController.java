@@ -5,6 +5,7 @@ import com.devforge.platform.course.domain.Lesson;
 import com.devforge.platform.course.service.CourseService;
 import com.devforge.platform.course.service.LessonService;
 import com.devforge.platform.enrollment.repository.EnrollmentRepository;
+import com.devforge.platform.enrollment.service.EnrollmentService;
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
 import com.devforge.platform.common.service.MarkdownService;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
@@ -32,6 +34,7 @@ public class ClassroomController {
     private final UserService userService;
     private final EnrollmentRepository enrollmentRepository; // Direct repo access for check (Clean enough for MVP)
     private final MarkdownService markdownService;
+    private final EnrollmentService enrollmentService;
 
     /**
      * Entry point for learning. Redirects to the first lesson of the course.
@@ -98,6 +101,9 @@ public class ClassroomController {
             model.addAttribute("prevLessonId", lessons.get(currentIndex - 1).getId());
         }
 
+        List<Long> completedLessonIds = enrollmentService.getCompletedLessonIds(student, courseId);
+        model.addAttribute("completedLessonIds", completedLessonIds);
+
         return "course/classroom";
     }
 
@@ -105,6 +111,30 @@ public class ClassroomController {
         if (!enrollmentRepository.existsByUserIdAndCourseId(student.getId(), courseId)) {
             log.warn("Access denied: User {} is not enrolled in course {}", student.getEmail(), courseId);
             throw new AccessDeniedException("You must be enrolled to view this course.");
+        }
+    }
+
+    @PostMapping("/{courseId}/lecture/{lessonId}/complete")
+    @PreAuthorize("hasRole('STUDENT')")
+    public String completeLesson(@PathVariable Long courseId, 
+                                 @PathVariable Long lessonId, 
+                                 Principal principal) {
+        User student = userService.getByEmail(principal.getName());
+        enrollmentService.markLessonAsComplete(student, courseId, lessonId);
+        
+        List<Lesson> lessons = lessonService.getLessonsByCourseId(courseId);
+        Long nextLessonId = null;
+        for (int i = 0; i < lessons.size(); i++) {
+            if (lessons.get(i).getId().equals(lessonId) && i < lessons.size() - 1) {
+                nextLessonId = lessons.get(i + 1).getId();
+                break;
+            }
+        }
+        
+        if (nextLessonId != null) {
+            return "redirect:/learn/" + courseId + "/lecture/" + nextLessonId;
+        } else {
+            return "redirect:/my-learning?courseCompleted";
         }
     }
 }

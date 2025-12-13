@@ -38,8 +38,11 @@
                    th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${lesson.id})}"
                    class="lesson-item border-bottom"
                    th:classappend="${lesson.id == currentLesson.id} ? 'active' : ''">
-                    <small class="text-muted me-2" th:text="${iter.count} + '.'">1.</small>
-                    <span th:text="${lesson.title}">Lesson Title</span>
+                   <div>
+                        <small class="text-muted me-2" th:text="${iter.count} + '.'">1.</small>
+                        <span th:text="${lesson.title}">Lesson Title</span>
+                   </div>
+                    <span th:if="${#lists.contains(completedLessonIds, lesson.id)}" class="text-success">✔</span>
                 </a>
             </div>
         </div>
@@ -48,18 +51,24 @@
         <div class="col-md-9 content-area">
             
             <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 th:text="${currentLesson.title}">Introduction</h2>
-                <div>
-                     <!-- Navigation Buttons -->
-                    <a th:if="${prevLessonId}" th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${prevLessonId})}" 
-                       class="btn btn-outline-secondary me-2">Previous</a>
+            <div class="d-flex gap-2">
+                <!-- Previoud -->
+                <a th:if="${prevLessonId}" th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${prevLessonId})}" 
+                class="btn btn-outline-secondary">Previous</a>
+                
+                <!-- Complete lesson form -->
+                <form th:action="@{/learn/{cid}/lecture/{lid}/complete(cid=${course.id}, lid=${currentLesson.id})}" method="post">
                     
-                    <a th:if="${nextLessonId}" th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
-                       class="btn btn-primary">Next Lesson &rarr;</a>
-                       
-                    <a th:unless="${nextLessonId}" href="/my-learning" class="btn btn-success">Finish Course 🏆</a>
-                </div>
+                    <!-- If there another lessons -->
+                    <button th:if="${nextLessonId}" type="submit" class="btn btn-primary">
+                        Mark as Completed & Next &rarr;
+                    </button>
+                    
+                    <!-- If it is last lesson -->
+                    <button th:unless="${nextLessonId}" type="submit" class="btn btn-success">
+                        Finish Course 🏆
+                    </button>
+                </form>
             </div>
 
             <!-- Video Player (Optional) -->

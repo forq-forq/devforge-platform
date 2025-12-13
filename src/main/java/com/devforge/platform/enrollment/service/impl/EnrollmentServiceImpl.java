@@ -1,9 +1,14 @@
 package com.devforge.platform.enrollment.service.impl;
 
 import com.devforge.platform.course.domain.Course;
+import com.devforge.platform.course.domain.Lesson;
+import com.devforge.platform.course.repository.LessonRepository;
 import com.devforge.platform.course.service.CourseService;
 import com.devforge.platform.enrollment.domain.Enrollment;
+import com.devforge.platform.enrollment.domain.EnrollmentStatus;
+import com.devforge.platform.enrollment.domain.LessonProgress;
 import com.devforge.platform.enrollment.repository.EnrollmentRepository;
+import com.devforge.platform.enrollment.repository.LessonProgressRepository;
 import com.devforge.platform.enrollment.service.EnrollmentService;
 import com.devforge.platform.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -20,6 +26,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
     private final CourseService courseService;
+    private final LessonProgressRepository lessonProgressRepository;
+    private final LessonRepository lessonRepository;
 
     @Override
     @Transactional
@@ -46,5 +54,59 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Override
     public List<Enrollment> getStudentEnrollments(User student) {
         return enrollmentRepository.findAllByUserId(student.getId());
+    }
+
+    @Override
+    @Transactional
+    public void markLessonAsComplete(User student, Long courseId, Long lessonId) {
+        Enrollment enrollment = enrollmentRepository.findAllByUserId(student.getId()).stream()
+                .filter(e -> e.getCourse().getId().equals(courseId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Student not enrolled in this course"));
+
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson not found"));
+        
+        if (!lesson.getCourse().getId().equals(courseId)) {
+             throw new IllegalArgumentException("Lesson belongs to another course");
+        }
+
+        LessonProgress progress = lessonProgressRepository
+                .findByEnrollmentIdAndLessonId(enrollment.getId(), lessonId)
+                .orElse(LessonProgress.builder()
+                        .enrollment(enrollment)
+                        .lesson(lesson)
+                        .build());
+        
+        progress.setCompleted(true);
+        progress.setCompletedAt(LocalDateTime.now());
+        lessonProgressRepository.save(progress);
+
+        long totalLessons = lessonRepository.countByCourseId(courseId); // Надо добавить этот метод в LessonRepository!
+        long completedLessons = lessonProgressRepository.countByEnrollmentIdAndIsCompletedTrue(enrollment.getId());
+
+        int percent = (int) ((completedLessons * 100) / totalLessons);
+        
+        enrollment.setProgress(percent);
+        if (percent == 100) {
+            enrollment.setStatus(EnrollmentStatus.COMPLETED);
+            enrollment.setCompletedAt(LocalDateTime.now());
+        }
+        enrollmentRepository.save(enrollment);
+    }
+
+    @Override
+    public List<Long> getCompletedLessonIds(User student, Long courseId) {
+        Enrollment enrollment = enrollmentRepository.findAllByUserId(student.getId()).stream()
+                .filter(e -> e.getCourse().getId().equals(courseId))
+                .findFirst()
+                .orElse(null);
+        
+        if (enrollment == null) return List.of();
+
+        return lessonProgressRepository.findAllByEnrollmentId(enrollment.getId()).stream()
+                .filter(LessonProgress::isCompleted)
+                .map(lp -> lp.getLesson().getId())
+                .toList();
     }
 }

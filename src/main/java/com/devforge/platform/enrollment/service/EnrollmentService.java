@@ -16,4 +16,14 @@ public interface EnrollmentService {
      * Returns list of courses the student is currently learning.
      */
     List<Enrollment> getStudentEnrollments(User student);
+
+    /**
+     * Allow user to mark lessons that they're already complete
+     */
+    void markLessonAsComplete(User student, Long courseId, Long lessonId);
+
+    /**
+     * Returns a list of lessons that students already complete.
+     */
+    List<Long> getCompletedLessonIds(User student, Long courseId);
 }
