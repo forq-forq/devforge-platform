@@ -26,7 +26,7 @@
 <div class="container-fluid">
     <div class="row">
         
-        <!-- Sidebar: Curriculum -->
+        <!-- Curriculum -->
         <div class="col-md-3 p-0 sidebar bg-white">
             <div class="p-3 border-bottom bg-light">
                 <a href="/my-learning" class="text-decoration-none text-secondary mb-2 d-block">&larr; Back to Dashboard</a>
@@ -51,44 +51,71 @@
         <div class="col-md-9 content-area">
             
             <!-- Header -->
-            <div class="d-flex gap-2">
-                <!-- Previoud -->
-                <a th:if="${prevLessonId}" th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${prevLessonId})}" 
-                class="btn btn-outline-secondary">Previous</a>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 th:text="${currentLesson.title}">Title</h2>
                 
-                <!-- Complete lesson form -->
-                <form th:action="@{/learn/{cid}/lecture/{lid}/complete(cid=${course.id}, lid=${currentLesson.id})}" method="post">
-                    
-                    <!-- If there another lessons -->
-                    <button th:if="${nextLessonId}" type="submit" class="btn btn-primary">
-                        Mark as Completed & Next &rarr;
-                    </button>
-                    
-                    <!-- If it is last lesson -->
-                    <button th:unless="${nextLessonId}" type="submit" class="btn btn-success">
-                        Finish Course 🏆
-                    </button>
-                </form>
+                <!-- Navigation (Only show Next if it's a Lecture or already completed) -->
+                <div class="d-flex gap-2">
+                    <a th:if="${prevLessonId}" th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${prevLessonId})}" 
+                       class="btn btn-outline-secondary">Previous</a>
+                       
+                    <!-- For Lectures: Manual Complete -->
+                    <form th:if="${currentLesson.type.name() == 'LECTURE'}" 
+                          th:action="@{/learn/{cid}/lecture/{lid}/complete(cid=${course.id}, lid=${currentLesson.id})}" method="post">
+                        <button th:if="${nextLessonId}" type="submit" class="btn btn-primary">Next &rarr;</button>
+                        <button th:unless="${nextLessonId}" type="submit" class="btn btn-success">Finish Course</button>
+                    </form>
+
+                    <!-- For Practice: Next button appears only after success (handled by JS) -->
+                    <a th:if="${currentLesson.type.name() == 'PRACTICE' and nextLessonId != null}" 
+                        id="nextBtn"
+                        th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
+                        class="btn btn-primary disabled">Next &rarr;</a>
+                </div>
             </div>
 
-            <!-- Video Player (Optional) -->
-            <div th:if="${currentLesson.videoUrl != null and !currentLesson.videoUrl.isEmpty()}" class="video-container shadow-sm">
-                <!-- Simple logic to support YouTube embeds if user pastes full URL -->
-                <!-- Ideally use a helper to extract ID, but for MVP we assume user puts embed URL or we trust raw URL -->
-                <iframe th:src="${currentLesson.videoUrl}" 
-                        title="Lesson Video" frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen></iframe>
-            </div>
-
-            <!-- Text Content -->
-            <div class="card shadow-sm border-0">
-                <div class="card-body">
-                    <!-- th:utext is dangerous for XSS, but for Teacher content (Trusted) it allows HTML formatting -->
-                    <div th:utext="${htmlContent}">
-                        Lesson content...
+            <!-- === LECTURE === -->
+            <div th:if="${currentLesson.type.name() == 'LECTURE'}">
+                <div th:if="${currentLesson.videoUrl}" class="video-container shadow-sm">
+                    <iframe th:src="${currentLesson.videoUrl}" frameborder="0" allowfullscreen></iframe>
+                </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body lesson-content">
+                        <div th:utext="${htmlContent}"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- === PRACTICE === -->
+            <div th:if="${currentLesson.type.name() == 'PRACTICE'}" class="h-100">
+                
+                <!-- Task Description (Task text) -->
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-header bg-white fw-bold">
+                        📋 Task Description
+                    </div>
+                    <div class="card-body lesson-content">
+                        <div th:utext="${htmlContent}"></div>
+                    </div>
+                </div>
+
+                <!-- Editor Instructions -->
+                <div class="alert alert-info py-2">
+                    <small>Write your Java code below. The class name must match the problem definition.</small>
+                </div>
+
+                <!-- Code Editor Container -->
+                <div id="editor-container" style="height: 500px; border: 1px solid #ccc;"></div>
+
+                <!-- Controls -->
+                <div class="mt-3 d-flex justify-content-between align-items-center mb-5">
+                    <div id="result-message" class="fw-bold"></div>
+                    <button id="runBtn" class="btn btn-success px-4" onclick="runCode()">Run Code ▶</button>
+                </div>
+
+                <!-- Hidden inputs -->
+                <input type="hidden" id="lessonId" th:value="${currentLesson.id}">
+                <input type="hidden" id="starterCode" th:value="${problem != null ? problem.starterCode : ''}">
             </div>
 
         </div>
@@ -99,5 +126,82 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    // Only init editor if we are in PRACTICE mode
+    const isPractice = /*[[${currentLesson.type.name() == 'PRACTICE'}]]*/ false;
+    
+    let editor;
+
+    if (isPractice) {
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+        
+        require(['vs/editor/editor.main'], function() {
+            const starterCode = document.getElementById('starterCode').value;
+            
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: starterCode,
+                language: 'java',
+                theme: 'vs-dark',
+                automaticLayout: true
+            });
+        });
+    }
+
+    function runCode() {
+        if (!editor) return;
+        
+        const code = editor.getValue();
+        const lessonId = document.getElementById('lessonId').value;
+        const resultDiv = document.getElementById('result-message');
+        const runBtn = document.getElementById('runBtn');
+        const nextBtn = document.getElementById('nextBtn'); // Might be null if last lesson
+
+        // UI Loading state
+        runBtn.disabled = true;
+        runBtn.innerText = "Running...";
+        resultDiv.className = "text-muted";
+        resultDiv.innerText = "Compiling and testing...";
+
+        // AJAX Request
+        fetch(`/api/practice/${lessonId}/run`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Add CSRF token if Spring Security requires it (often needed for POST)
+                // 'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content 
+            },
+            body: JSON.stringify({ code: code })
+        })
+        .then(response => response.json())
+        .then(data => {
+            runBtn.disabled = false;
+            runBtn.innerText = "Run Code ▶";
+            
+            if (data.success) {
+                resultDiv.className = "text-success fw-bold";
+                resultDiv.innerText = data.message;
+                // Enable Next button
+                if (nextBtn) {
+                    nextBtn.classList.remove("disabled");
+                    nextBtn.classList.add("btn-success"); // Highlight it
+                }
+            } else {
+                resultDiv.className = "text-danger fw-bold";
+                resultDiv.innerText = data.message;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            runBtn.disabled = false;
+            runBtn.innerText = "Run Code ▶";
+            resultDiv.className = "text-danger";
+            resultDiv.innerText = "Server error occurred.";
+        });
+    }
+    /*]]>*/
+</script>
 </body>
 </html>

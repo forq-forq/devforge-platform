@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .permitAll()
             )
             // H2 Console specific settings (otherwise it won't work)
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**"))
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/h2-console/**", "/api/practice/**"))
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();

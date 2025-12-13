@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Create Practice | DevForge</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .code-font { font-family: 'Courier New', Courier, monospace; }
+    </style>
+</head>
+<body class="bg-light">
+<div th:replace="~{layout/nav :: header}"></div>
+
+<div class="container mt-4 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Create Coding Challenge</h3>
+                    <span class="badge bg-success">PRACTICE</span>
+                </div>
+                <div class="card-body">
+                    <!-- URL for POST request -->
+                    <form th:action="@{/courses/{id}/lessons/create/practice(id=${courseId})}" 
+                          th:object="${problem}" method="post" id="practiceForm">
+
+                        <!-- === BASIC LESSON INFO === -->
+                        <h5 class="text-primary border-bottom pb-2">1. Lesson Details</h5>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-2">
+                                <label class="form-label">Order #</label>
+                                <input type="number" th:field="*{orderIndex}" class="form-control" required>
+                            </div>
+                            <div class="col-md-10">
+                                <label class="form-label">Title</label>
+                                <input type="text" th:field="*{title}" class="form-control" required placeholder="e.g. Sum of Two Numbers">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description (Markdown supported)</label>
+                            <textarea th:field="*{content}" class="form-control" rows="4" required></textarea>
+                        </div>
+
+                        <!-- === SCODE CONFIGURATION === -->
+                        <h5 class="text-primary border-bottom pb-2 mt-4">2. Code Configuration</h5>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Class Name</label>
+                                <input type="text" th:field="*{className}" class="form-control code-font" required>
+                                <div class="form-text">e.g. Solution</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Method Name</label>
+                                <input type="text" th:field="*{methodName}" class="form-control code-font" required>
+                                <div class="form-text">e.g. solve</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Signature (Input Types)</label>
+                                <input type="text" th:field="*{methodSignature}" class="form-control code-font" required>
+                                <div class="form-text">e.g. int, int OR String, int</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Starter Code Template</label>
+                            <textarea th:field="*{starterCode}" class="form-control code-font bg-dark text-light" rows="6" required></textarea>
+                            <div class="form-text">This is what the student sees initially.</div>
+                        </div>
+
+                        <!-- === TEST CASES === -->
+                        <h5 class="text-primary border-bottom pb-2 mt-4 d-flex justify-content-between">
+                            3. Test Cases
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addTestCase()">+ Add Case</button>
+                        </h5>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="testsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Input Args (comma separated)</th>
+                                        <th>Expected Output</th>
+                                        <th style="width: 50px;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="testsBody">
+                                    <!-- Rows will be added by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a th:href="@{/courses/my}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Challenge</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let testIndex = 0;
+
+    function addTestCase() {
+        const tbody = document.getElementById('testsBody');
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>
+                <input type="text" class="form-control code-font" 
+                       name="testCases[${testIndex}].inputData" placeholder="e.g. 5, 10" required>
+            </td>
+            <td>
+                <input type="text" class="form-control code-font" 
+                       name="testCases[${testIndex}].expectedOutput" placeholder="e.g. 15" required>
+            </td>
+            <td>
+                <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">×</button>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+        testIndex++;
+    }
+
+    // Add one empty row by default
+    document.addEventListener("DOMContentLoaded", () => {
+        addTestCase();
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
