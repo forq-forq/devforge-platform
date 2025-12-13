@@ -46,4 +46,9 @@ public class Lesson {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default // Lombok will use this by default
+    private LessonType type = LessonType.LECTURE;
 }
