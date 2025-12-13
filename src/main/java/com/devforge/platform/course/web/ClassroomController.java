@@ -6,6 +6,8 @@ import com.devforge.platform.course.service.CourseService;
 import com.devforge.platform.course.service.LessonService;
 import com.devforge.platform.enrollment.repository.EnrollmentRepository;
 import com.devforge.platform.enrollment.service.EnrollmentService;
+import com.devforge.platform.practice.domain.Problem;
+import com.devforge.platform.practice.repository.ProblemRepository;
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
 import com.devforge.platform.common.service.MarkdownService;
@@ -35,6 +37,7 @@ public class ClassroomController {
     private final EnrollmentRepository enrollmentRepository; // Direct repo access for check (Clean enough for MVP)
     private final MarkdownService markdownService;
     private final EnrollmentService enrollmentService;
+    private final ProblemRepository problemRepository;
 
     /**
      * Entry point for learning. Redirects to the first lesson of the course.
@@ -85,6 +88,11 @@ public class ClassroomController {
 
         // Render in markdown
         String htmlContent = markdownService.renderHtml(currentLesson.getContent());
+
+        if (currentLesson.getType() == com.devforge.platform.course.domain.LessonType.PRACTICE) {
+            Problem problem = problemRepository.findByLessonId(lessonId).orElse(null);
+            model.addAttribute("problem", problem);
+        }
 
         // 3. Populate Model
         model.addAttribute("course", course);
