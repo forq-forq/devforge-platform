@@ -67,10 +67,10 @@
                     </form>
 
                     <!-- For Practice: Next button appears only after success (handled by JS) -->
-                    <a th:if="${currentLesson.type.name() == 'PRACTICE' and nextLessonId}" 
-                       id="nextBtn"
-                       th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
-                       class="btn btn-primary disabled">Next &rarr;</a>
+                    <a th:if="${currentLesson.type.name() == 'PRACTICE' and nextLessonId != null}" 
+                        id="nextBtn"
+                        th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
+                        class="btn btn-primary disabled">Next &rarr;</a>
                 </div>
             </div>
 
