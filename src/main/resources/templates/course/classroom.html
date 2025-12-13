@@ -110,11 +110,25 @@
                 <!-- Controls -->
                 <div class="mt-3 d-flex justify-content-between align-items-center mb-5">
                     <div id="result-message" class="fw-bold"></div>
-                    <button id="runBtn" class="btn btn-success px-4" onclick="runCode()">Run Code ▶</button>
+                    
+                    <div class="d-flex gap-2">
+                        <button id="runBtn" class="btn btn-success px-4" onclick="runCode()">Run Code ▶</button>
+                        
+                        <!-- Button NEXT (if there exists next lesson) -->
+                        <a th:if="${nextLessonId != null}" 
+                           id="practiceNextBtn"
+                           th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
+                           class="btn btn-secondary disabled">Next Lesson &rarr;</a>
+
+                        <!-- Button FINISH (if it is last lesson) -->
+                        <a th:if="${nextLessonId == null}" 
+                           id="practiceFinishBtn"
+                           href="/my-learning" 
+                           class="btn btn-secondary disabled">Finish Course 🏆</a>
+                    </div>
                 </div>
 
                 <!-- Hidden inputs -->
-                <input type="hidden" id="lessonId" th:value="${currentLesson.id}">
                 <input type="hidden" id="starterCode" th:value="${problem != null ? problem.starterCode : ''}">
             </div>
 
@@ -141,14 +155,29 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-end mb-5">
-                         <!-- Submit form -->
-                         <button type="button" class="btn btn-primary btn-lg" onclick="submitQuiz()">Submit Answers</button>
+                    <div class="d-flex justify-content-end align-items-center gap-2 mb-5">
+                         <!-- Check button (hidden by defulat) -->
+                         <button type="button" id="quizSubmitBtn" class="btn btn-primary btn-lg" onclick="submitQuiz()">Submit Answers</button>
+                         
+                         <!-- Button NEXT -->
+                         <a th:if="${nextLessonId != null}" 
+                            id="quizNextBtn"
+                            th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
+                            class="btn btn-primary btn-lg d-none">Next Lesson &rarr;</a>
+
+                         <!-- Button FINISH -->
+                         <a th:if="${nextLessonId == null}" 
+                            id="quizFinishBtn"
+                            href="/my-learning" 
+                            class="btn btn-success btn-lg d-none">Finish Course 🏆</a>
                     </div>
                     
                     <div id="quiz-result" class="alert d-none mt-3"></div>
                 </form>
             </div>
+
+            <input type="hidden" id="lessonId" th:value="${currentLesson.id}">
+
         </div>
     </div>
 </div>
@@ -214,10 +243,19 @@
             if (data.success) {
                 resultDiv.className = "text-success fw-bold";
                 resultDiv.innerText = data.message;
-                // Enable Next button
-                if (nextBtn) {
-                    nextBtn.classList.remove("disabled");
-                    nextBtn.classList.add("btn-success"); // Highlight it
+                
+                // Execute Next
+                const pNext = document.getElementById('practiceNextBtn');
+                if (pNext) {
+                    pNext.classList.remove("disabled", "btn-secondary");
+                    pNext.classList.add("btn-primary");
+                }
+                
+                // Execute Finish
+                const pFinish = document.getElementById('practiceFinishBtn');
+                if (pFinish) {
+                    pFinish.classList.remove("disabled", "btn-secondary");
+                    pFinish.classList.add("btn-success");
                 }
             } else {
                 resultDiv.className = "text-danger fw-bold";
@@ -234,8 +272,55 @@
     }
 
     function submitQuiz() {
-        // TODO: implement proper submit of quiz form
-        alert("Quiz submission logic needs to be implemented in the next step!");
+        const lessonId = document.getElementById('lessonId').value;
+        const resultDiv = document.getElementById('quiz-result');
+        const form = document.getElementById('quizForm');
+        
+        // Collect data in form
+        const formData = new FormData(form);
+        const answers = {};
+        
+        for (let [key, value] of formData.entries()) {
+            // regex for finding the id of question
+            const match = key.match(/\[(\d+)\]/);
+            if (match && match[1]) {
+                const questionId = match[1];
+                answers[questionId] = parseInt(value);
+            }
+        }
+
+        // Send request
+        fetch(`/api/quiz/${lessonId}/submit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ answers: answers })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Show results
+            resultDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
+            resultDiv.classList.add(data.passed ? 'alert-success' : 'alert-danger');
+            resultDiv.innerText = data.message;
+            
+            if (data.passed) {
+                // Hide SUBMIT
+                document.getElementById('quizSubmitBtn').classList.add('d-none');
+
+                // Show button NEXT
+                const qNext = document.getElementById('quizNextBtn');
+                if (qNext) qNext.classList.remove('d-none');
+
+                // Show button FINISH
+                const qFinish = document.getElementById('quizFinishBtn');
+                if (qFinish) qFinish.classList.remove('d-none');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error submitting quiz");
+        });
     }
     /*]]>*/
 </script>
