@@ -24,6 +24,10 @@ public class Problem {
     @JoinColumn(name = "lesson_id", nullable = false)
     private Lesson lesson;
 
+    // The name of the class required for compilation
+    @Column(nullable = false)
+    private String className;
+
     // Code template for student
     @Column(columnDefinition = "TEXT", nullable = false)
     private String starterCode;
