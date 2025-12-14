@@ -36,7 +36,54 @@
 
                         <!-- Questions Container -->
                         <div id="questions-container">
-                            <!-- Questions will be added here by JS -->
+                            <!-- Render existing questions -->
+                            <div th:each="question, qStat : *{questions}" class="card mb-3 border-secondary">
+                                <div class="card-body bg-light">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <h6 class="fw-bold" th:text="'Question #' + ${qStat.count}">Question #1</h6>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.card').remove()">Remove</button>
+                                    </div>
+                                    
+                                    <!-- Question text -->
+                                    <input type="text" class="form-control mb-3" 
+                                        th:field="*{questions[__${qStat.index}__].text}" 
+                                        placeholder="Enter question text..." required>
+
+                                    <label class="form-label small text-muted">Answer Options (Select one correct answer)</label>
+                                    
+                                    <!-- Options container -->
+                                    <div th:id="'options-container-' + ${qStat.index}">
+                                        
+                                        <!-- Cycle: options -->
+                                        <div th:each="option, oStat : *{questions[__${qStat.index}__].options}" class="input-group mb-2">
+                                            <div class="input-group-text">
+                                                <!-- Radio Button -->
+                                                <input class="form-check-input mt-0" type="radio" 
+                                                    th:name="'radio_group_' + ${qStat.index}"
+                                                    th:checked="${option.isCorrect}"
+                                                    th:onclick="'updateCorrectAnswer(' + ${qStat.index} + ', ' + ${oStat.index} + ')'"
+                                                    required>
+                                            </div>
+                                            
+                                            <!-- Option text -->
+                                            <input type="text" class="form-control" 
+                                                th:field="*{questions[__${qStat.index}__].options[__${oStat.index}__].text}" 
+                                                placeholder="Option text" required>
+                                            
+                                            <input type="hidden" 
+                                                th:id="'hidden_correct_' + ${qStat.index} + '_' + ${oStat.index}"
+                                                th:name="|questions[${qStat.index}].options[${oStat.index}].correct|"
+                                                th:value="${option.isCorrect}"
+                                                class="is-correct-hidden">
+                                                
+                                            <button type="button" class="btn btn-outline-secondary" onclick="this.closest('.input-group').remove()">×</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="button" class="btn btn-sm btn-link text-decoration-none" 
+                                            th:onclick="'addOption(' + ${qStat.index} + ')'">+ Add Option</button>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2 mb-4">
@@ -44,7 +91,11 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a th:href="@{/courses/{id}/lessons/choose-type(id=${courseId})}" class="btn btn-secondary">Cancel</a>
+                            <a th:href="${isEdit} ? @{/courses/{id}(id=${courseId})} 
+                                                : @{/courses/{id}/lessons/choose-type(id=${courseId})}" 
+                            class="btn btn-secondary">
+                            Back
+                            </a>
                             <button type="submit" class="btn btn-primary" th:text="${isEdit} ? 'Update Quiz' : 'Save Quiz'">Save</button>
                         </div>
                     </form>

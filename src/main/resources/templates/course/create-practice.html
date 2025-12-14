@@ -105,7 +105,11 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
-                            <a th:href="@{/courses/{id}/lessons/choose-type(id=${courseId})}" class="btn btn-secondary">Cancel</a>
+                            <a th:href="${isEdit} ? @{/courses/{id}(id=${courseId})} 
+                                                : @{/courses/{id}/lessons/choose-type(id=${courseId})}" 
+                            class="btn btn-secondary">
+                            Back
+                            </a>
                             <button type="submit" class="btn btn-primary" th:text="${isEdit} ? 'Update Challenge' : 'Create Challenge'">Create</button>
                         </div>
                     </form>

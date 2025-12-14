@@ -17,7 +17,7 @@
                 <div class="card-body">
                     <!-- URL format: /courses/{id}/lessons -->
                     <form th:action="${isEdit} ? @{/courses/{cid}/lessons/{lid}/edit/lecture(cid=${courseId}, lid=${lessonId})} 
-                           : @{/courses/{id}/lessons/create(id=${courseId}, type='LECTURE')}"
+                           : @{/courses/{id}/lessons(id=${courseId})}"
                         th:object="${lesson}" method="post">
                         
                         <!-- Order Index -->
@@ -54,7 +54,11 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a th:href="@{/courses/{id}/lessons/choose-type(id=${courseId})}" class="btn btn-outline-secondary">Cancel</a>
+                            <a th:href="${isEdit} ? @{/courses/{id}(id=${courseId})} 
+                                                : @{/courses/{id}/lessons/choose-type(id=${courseId})}" 
+                            class="btn btn-secondary">
+                            Back
+                            </a>
                             <button type="submit" class="btn btn-primary" th:text="${isEdit} ? 'Update Lesson' : 'Create Draft'">Create</button>
                         </div>
                     </form>
