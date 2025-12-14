@@ -51,5 +51,5 @@ public interface CourseService {
     /**
      * Allows to update course main information.
      */
-    void updateCourseInfo(Long courseId, CreateCourseRequest request, User actor);
+    void updateCourseInfo(Long courseId, CreateCourseRequest request, org.springframework.web.multipart.MultipartFile file, User actor);
 }

@@ -15,6 +15,11 @@
                     <h3 class="mb-0">Edit Course Info</h3>
                 </div>
                 <div class="card-body">
+                     <form th:action="@{/courses/{id}/edit(id=${courseId})}" 
+                          th:object="${course}" 
+                          method="post" 
+                          enctype="multipart/form-data">
+
                     <form th:action="@{/courses/{id}/edit(id=${courseId})}" th:object="${course}" method="post">
                         
                         <!-- Title -->
@@ -31,6 +36,13 @@
                                 <option value="INTERMEDIATE">Intermediate</option>
                                 <option value="ADVANCED">Advanced</option>
                             </select>
+                        </div>
+
+                        <!-- Image -->
+                        <div class="mb-3">
+                            <label class="form-label">Cover Image</label>
+                            <input type="file" name="file" class="form-control" accept="image/*">
+                            <div class="form-text">Recommended size: 800x400. Max 5MB.</div>
                         </div>
 
                         <!-- Description -->

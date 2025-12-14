@@ -21,7 +21,7 @@ public class QuizApiController {
     private final UserService userService;
 
     @PostMapping("/{lessonId}/submit")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     public ResponseEntity<QuizSubmissionResult> submitQuiz(@PathVariable Long lessonId,
                                                            @RequestBody QuizSubmissionRequest request,
                                                            Principal principal) {

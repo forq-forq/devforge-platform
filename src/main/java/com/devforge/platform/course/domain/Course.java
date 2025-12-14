@@ -47,6 +47,10 @@ public class Course {
     @Column(nullable = false)
     private CourseStatus status;
 
+    @Lob 
+    @Column(columnDefinition = "TEXT") 
+    private String coverImage; // Format: "data:image/png;base64,iVBORw0KGgoAAA..."
+
     /**
      * The teacher who created the course.
      * FetchType.LAZY is used for performance optimization.

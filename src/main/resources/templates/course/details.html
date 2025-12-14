@@ -10,67 +10,84 @@
 <div class="container mt-5">
     
     <!-- Header Section -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body p-5">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <span class="badge bg-info text-dark mb-2" th:text="${course.level}">BEGINNER</span>
-                    <span th:if="${isAuthor}" class="badge bg-warning text-dark" th:text="${course.status}">STATUS</span>
-                    
-                    <h1 class="display-5 fw-bold" th:text="${course.title}">Course Title</h1>
-                    <p class="lead" th:text="${course.description}">Description...</p>
-                    <p class="text-muted">Author: <span th:text="${course.author.fullName}">Name</span></p>
+    <div class="card shadow-sm mb-4 overflow">
+        <div class="row g-0">
+            <!-- Image -->
+            <div class="col-md-4 bg-light d-flex align-items-center justify-content-center" style="min-height: 250px;">
+                <img th:if="${course.coverImage != null}" 
+                     th:src="${course.coverImage}" 
+                     class="img-fluid w-100 h-100" 
+                     style="object-fit: cover;" 
+                     alt="Course Cover">
+                     
+                <div th:if="${course.coverImage == null}" class="text-center text-muted">
+                    <span class="display-1">🎓</span>
                 </div>
-                
-                <!-- Action Buttons -->
-                <div class="d-flex flex-column gap-2" style="min-width: 200px;">
-                    <!-- STUDENT ACTION -->
-                    <form th:unless="${isAuthor}" th:action="@{/enroll/{id}(id=${course.id})}" method="post">
-                        <button class="btn btn-primary btn-lg w-100">Start Learning</button>
-                    </form>
-
-                    <!-- TEACHER ACTIONS -->
-                    <div th:if="${isAuthor}">
+            </div>
+            <div class="col-md-8">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge bg-info text-dark mb-2" th:text="${course.level}">BEGINNER</span>
+                            <span th:if="${isAuthor}" class="badge bg-warning text-dark" th:text="${course.status}">STATUS</span>
+                            
+                            <h1 class="fw-bold" th:text="${course.title}">Course Title</h1>
+                            <p class="text-muted mb-3">Author: <span th:text="${course.author.fullName}">Name</span></p>
+                            <p class="lead fs-6" th:text="${course.description}">Description...</p>
+                        </div>
                         
-                        <!-- If course published, read-only -->
-                        <div th:if="${course.status.name() == 'PUBLISHED'}">
-                            <div class="alert alert-success py-2 text-center mb-2">
-                                <small>Course is Live 🟢</small>
-                            </div>
-                            
-                            <!-- UNPUBLISH button-->
-                            <form th:action="@{/courses/{id}/unpublish(id=${course.id})}" method="post">
-                                <button class="btn btn-outline-danger w-100" 
-                                        onclick="return confirm('Unpublishing will hide the course from new students. Existing students might lose access. Continue?')">
-                                    🛑 Unpublish to Edit
-                                </button>
+                        <!-- Action Buttons -->
+                        <div class="d-flex flex-column gap-2" style="min-width: 200px;">
+                            <!-- STUDENT ACTION -->
+                            <form th:unless="${isAuthor}" th:action="@{/enroll/{id}(id=${course.id})}" method="post">
+                                <button class="btn btn-primary btn-lg w-100">Start Learning</button>
                             </form>
-                        </div>
 
-                        <!-- If course is draft -> edit-only -->
-                        <div th:if="${course.status.name() == 'DRAFT'}">
-                            <div class="alert alert-warning py-2 text-center mb-2">
-                                <small>Draft Mode 📝</small>
+                            <!-- TEACHER ACTIONS -->
+                            <div th:if="${isAuthor}">
+                                
+                                <!-- If course published, read-only -->
+                                <div th:if="${course.status.name() == 'PUBLISHED'}">
+                                    <div class="alert alert-success py-2 text-center mb-2">
+                                        <small>Course is Live 🟢</small>
+                                    </div>
+                                    
+                                    <!-- UNPUBLISH button-->
+                                    <form th:action="@{/courses/{id}/unpublish(id=${course.id})}" method="post">
+                                        <button class="btn btn-outline-danger w-100" 
+                                                onclick="return confirm('Unpublishing will hide the course from new students. Existing students might lose access. Continue?')">
+                                            🛑 Unpublish to Edit
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- If course is draft -> edit-only -->
+                                <div th:if="${course.status.name() == 'DRAFT'}">
+                                    <div class="alert alert-warning py-2 text-center mb-2">
+                                        <small>Draft Mode 📝</small>
+                                    </div>
+
+                                    <!-- PUBLISH Button -->
+                                    <form th:action="@{/courses/{id}/publish(id=${course.id})}" method="post" class="mb-2">
+                                        <button class="btn btn-success w-100">🚀 Publish Course</button>
+                                    </form>
+                                    
+                                    <!-- PREVIEW Button -->
+                                    <a th:href="@{/learn/{id}(id=${course.id})}" target="_blank" class="btn btn-outline-dark w-100 mb-2">
+                                        👁 Preview Course
+                                    </a>
+
+                                    <a th:href="@{/courses/{id}/edit(id=${course.id})}" class="btn btn-secondary w-100 mb-2">✏ Edit Info</a>
+                                    <a th:href="@{/courses/{id}/lessons/choose-type(id=${course.id})}" class="btn btn-primary w-100">+ Add Lesson</a>
+                                </div>
                             </div>
-
-                            <!-- PUBLISH Button -->
-                            <form th:action="@{/courses/{id}/publish(id=${course.id})}" method="post" class="mb-2">
-                                <button class="btn btn-success w-100">🚀 Publish Course</button>
-                            </form>
-                            
-                            <!-- PREVIEW Button -->
-                            <a th:href="@{/learn/{id}(id=${course.id})}" target="_blank" class="btn btn-outline-dark w-100 mb-2">
-                                👁 Preview Course
-                            </a>
-
-                            <a th:href="@{/courses/{id}/edit(id=${course.id})}" class="btn btn-secondary w-100 mb-2">✏ Edit Info</a>
-                            <a th:href="@{/courses/{id}/lessons/choose-type(id=${course.id})}" class="btn btn-primary w-100">+ Add Lesson</a>
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
+
+
     </div>
 
     <!-- Syllabus (Lessons List) -->

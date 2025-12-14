@@ -29,7 +29,21 @@
     <div class="row">
         <!-- Loop through courses -->
         <div class="col-md-4 mb-4" th:each="course : ${courses}">
-            <div class="card h-100 shadow-sm">
+            <div class="card h-100 shadow-sm hover-shadow border-0">
+                <!-- Course Image-->
+                <!-- If image exists -->
+                <img th:if="${course.coverImage != null}" 
+                     th:src="${course.coverImage}" 
+                     class="card-img-top" 
+                     alt="Course Cover" 
+                     style="height: 200px; object-fit: cover;">
+                
+                <!-- If no predefined image -->
+                <div th:if="${course.coverImage == null}" 
+                     class="card-img-top d-flex align-items-center justify-content-center text-white"
+                     style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <h1 class="display-4">🎓</h1>
+                </div>
                 <div class="card-body">
                     <span class="badge bg-info text-dark mb-2" th:text="${course.level}">BEGINNER</span>
                     <h5 class="card-title fw-bold" th:text="${course.title}">Java Basics</h5>

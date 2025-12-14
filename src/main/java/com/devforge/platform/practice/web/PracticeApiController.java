@@ -28,27 +28,25 @@ public class PracticeApiController {
     private final UserService userService;
 
     @PostMapping("/{lessonId}/run")
-    @PreAuthorize("hasRole('STUDENT')")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER')")
     public ResponseEntity<RunCodeResponse> runCode(@PathVariable Long lessonId,
                                                    @RequestBody RunCodeRequest request,
                                                    Principal principal) {
         
-        // 1. Fetch the problem
+        User user = userService.getByEmail(principal.getName());
+        
         Problem problem = problemRepository.findByLessonId(lessonId)
-                .orElseThrow(() -> new IllegalArgumentException("No problem found for this lesson"));
+                .orElseThrow(() -> new IllegalArgumentException("No problem found"));
 
-        // 2. Execute code
         boolean passed = executionService.execute(request.code(), problem);
 
-        // 3. Handle result
         if (passed) {
-            // Mark lesson as complete if tests pass
-            User student = userService.getByEmail(principal.getName());
-            enrollmentService.markLessonAsComplete(student, problem.getLesson().getCourse().getId(), lessonId);
-            
-            return ResponseEntity.ok(new RunCodeResponse(true, "All tests passed! Lesson completed. 🏆"));
+            if (user.getRole() == com.devforge.platform.user.domain.Role.STUDENT) {
+                enrollmentService.markLessonAsComplete(user, problem.getLesson().getCourse().getId(), lessonId);
+            }
+            return ResponseEntity.ok(new RunCodeResponse(true, "All tests passed! 🏆"));
         } else {
-            return ResponseEntity.ok(new RunCodeResponse(false, "Tests failed. Check your logic and try again. ❌"));
+            return ResponseEntity.ok(new RunCodeResponse(false, "Tests failed. ❌"));
         }
     }
 }

@@ -288,6 +288,7 @@ public class CourseController {
     public String editCourseProcess(@PathVariable Long id,
                                     @Valid @ModelAttribute("course") CreateCourseRequest request,
                                     BindingResult bindingResult,
+                                    @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
                                     Principal principal,
                                     Model model) {
         if (bindingResult.hasErrors()) {
@@ -297,7 +298,7 @@ public class CourseController {
 
         User author = userService.getByEmail(principal.getName());
         try {
-            courseService.updateCourseInfo(id, request, author);
+            courseService.updateCourseInfo(id, request, file, author);
         } catch (IllegalStateException e) {
             return "redirect:/courses/" + id + "?error=published";
         }

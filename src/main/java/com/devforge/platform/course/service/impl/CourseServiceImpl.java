@@ -79,7 +79,7 @@ public class CourseServiceImpl implements CourseService {
 
     @Override
     @Transactional
-    public void updateCourseInfo(Long courseId, CreateCourseRequest request, User actor) {
+    public void updateCourseInfo(Long courseId, CreateCourseRequest request, org.springframework.web.multipart.MultipartFile file, User actor) {
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new IllegalArgumentException("Course not found"));
 
@@ -87,14 +87,26 @@ public class CourseServiceImpl implements CourseService {
             throw new AccessDeniedException("Not authorized");
         }
 
-        // Allows to edit course info only in DRAFT
         if (course.getStatus() != CourseStatus.DRAFT) {
-            throw new IllegalStateException("Cannot edit a published course. Unpublish it first.");
+            throw new IllegalStateException("Cannot edit a published course.");
         }
 
         course.setTitle(request.title());
         course.setDescription(request.description());
         course.setLevel(request.level());
-        courseRepository.save(course); 
+
+        // --- IMAGE LOGIC ---
+        if (file != null && !file.isEmpty()) {
+            try {
+                // Bytes -> Base64 String
+                String base64Image = java.util.Base64.getEncoder().encodeToString(file.getBytes());
+                // HTML prefix
+                course.setCoverImage("data:image/jpeg;base64," + base64Image);
+            } catch (java.io.IOException e) {
+                throw new RuntimeException("Error uploading image", e);
+            }
+        }
+
+        courseRepository.save(course);
     }
 }
