@@ -111,8 +111,8 @@
 
                 <!-- EDIT Button -->
                 <a th:if="${isAuthor and course.status.name() == 'DRAFT'}" 
-                   href="#" 
-                   class="btn btn-sm btn-outline-secondary disabled">Edit</a>
+                    th:href="@{/courses/{cid}/lessons/{lid}/edit(cid=${course.id}, lid=${lesson.id})}" 
+                    class="btn btn-sm btn-outline-secondary">Edit</a>
             </div>
         </div>
     

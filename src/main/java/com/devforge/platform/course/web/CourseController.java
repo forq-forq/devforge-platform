@@ -1,6 +1,7 @@
 package com.devforge.platform.course.web;
 
 import com.devforge.platform.course.domain.Course;
+import com.devforge.platform.course.domain.Lesson;
 import com.devforge.platform.course.service.CourseService;
 import com.devforge.platform.course.web.dto.CreateCourseRequest;
 import com.devforge.platform.enrollment.service.EnrollmentService;
@@ -8,10 +9,13 @@ import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
 import com.devforge.platform.course.service.LessonService;
 import com.devforge.platform.course.web.dto.CreateLessonRequest;
+import com.devforge.platform.practice.domain.Problem;
 import com.devforge.platform.practice.service.PracticeManagementService;
 import com.devforge.platform.practice.web.dto.CreateProblemRequest;
 import com.devforge.platform.quiz.service.QuizManagementService;
 import com.devforge.platform.quiz.web.dto.CreateQuizRequest;
+import com.devforge.platform.practice.repository.ProblemRepository;
+import com.devforge.platform.quiz.repository.QuizQuestionRepository;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,6 +48,8 @@ public class CourseController {
     private final LessonService lessonService;
     private final PracticeManagementService practiceManagementService;
     private final QuizManagementService quizManagementService;
+    private final ProblemRepository problemRepository;
+    private final QuizQuestionRepository quizQuestionRepository;
     
 
     // CONSTANTS for views
@@ -304,5 +311,111 @@ public class CourseController {
         }
         
         return "redirect:/courses/" + id + "?updated";
+    }
+
+    @GetMapping("/{courseId}/lessons/{lessonId}/edit")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String editLessonPage(@PathVariable Long courseId, 
+                                 @PathVariable Long lessonId, 
+                                 Model model,
+                                 Principal principal) {
+        User user = userService.getByEmail(principal.getName());
+        Lesson lesson = lessonService.getLessonById(lessonId);
+
+        // Check authority
+        if (!lesson.getCourse().getAuthor().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Not authorized");
+        }
+        if (lesson.getCourse().getStatus() != com.devforge.platform.course.domain.CourseStatus.DRAFT) {
+            return "redirect:/courses/" + courseId + "?error=published";
+        }
+
+        model.addAttribute("courseId", courseId);
+        model.addAttribute("lessonId", lessonId);
+        model.addAttribute("isEdit", true);
+
+        // Diferent types
+        switch (lesson.getType()) {
+            case LECTURE -> {
+                var dto = new CreateLessonRequest(lesson.getTitle(), lesson.getContent(), lesson.getVideoUrl(), lesson.getOrderIndex());
+                model.addAttribute("lesson", dto);
+                return "course/create-lesson"; // Reuse template
+            }
+            case PRACTICE -> {
+                Problem problem = problemRepository.findByLessonId(lessonId).orElseThrow();
+                var dto = new CreateProblemRequest();
+                // Map entity -> DTO
+                dto.setTitle(lesson.getTitle());
+                dto.setContent(lesson.getContent());
+                dto.setOrderIndex(lesson.getOrderIndex());
+                dto.setClassName(problem.getClassName());
+                dto.setMethodName(problem.getMethodName());
+                dto.setMethodSignature(problem.getMethodSignature());
+                dto.setStarterCode(problem.getStarterCode());
+                
+                // Map tests
+                var testDtos = problem.getTestCases().stream()
+                    .map(t -> new com.devforge.platform.practice.web.dto.CreateTestCaseRequest(t.getInputData(), t.getExpectedOutput()))
+                    .collect(java.util.stream.Collectors.toList());
+                dto.setTestCases(testDtos);
+
+                model.addAttribute("problem", dto);
+                return "course/create-practice";
+            }
+            case QUIZ -> {
+                var questions = quizQuestionRepository.findAllByLessonId(lessonId);
+                var dto = new CreateQuizRequest();
+                dto.setTitle(lesson.getTitle());
+                dto.setOrderIndex(lesson.getOrderIndex());
+                
+                // Map questions
+                List<com.devforge.platform.quiz.web.dto.CreateQuestionRequest> qDtos = questions.stream().map(q -> {
+                    var qDto = new com.devforge.platform.quiz.web.dto.CreateQuestionRequest();
+                    qDto.setText(q.getText());
+                    qDto.setOptions(q.getOptions().stream()
+                        .map(o -> new com.devforge.platform.quiz.web.dto.CreateOptionRequest(o.getText(), o.isCorrect()))
+                        .collect(Collectors.toList()));
+                    return qDto;
+                }).collect(Collectors.toList());
+                dto.setQuestions(qDtos);
+
+                model.addAttribute("quiz", dto);
+                return "course/create-quiz";
+            }
+            default -> throw new IllegalStateException("Unknown type");
+        }
+    }
+
+    // UPDATE LECTURE
+    @PostMapping("/{courseId}/lessons/{lessonId}/edit/lecture")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String updateLecture(@PathVariable Long courseId, @PathVariable Long lessonId,
+                                @ModelAttribute("lesson") CreateLessonRequest request,
+                                Principal principal) {
+        User user = userService.getByEmail(principal.getName());
+        lessonService.updateLecture(lessonId, request, user);
+        return "redirect:/courses/" + courseId + "?updated";
+    }
+
+    // UPDATE PRACTICE
+    @PostMapping("/{courseId}/lessons/{lessonId}/edit/practice")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String updatePractice(@PathVariable Long courseId, @PathVariable Long lessonId,
+                                 @ModelAttribute("problem") CreateProblemRequest request,
+                                 Principal principal) {
+        User user = userService.getByEmail(principal.getName());
+        practiceManagementService.updatePractice(lessonId, request, user);
+        return "redirect:/courses/" + courseId + "?updated";
+    }
+
+    // UPDATE QUIZ
+    @PostMapping("/{courseId}/lessons/{lessonId}/edit/quiz")
+    @PreAuthorize("hasRole('TEACHER')")
+    public String updateQuiz(@PathVariable Long courseId, @PathVariable Long lessonId,
+                             @ModelAttribute("quiz") CreateQuizRequest request,
+                             Principal principal) {
+        User user = userService.getByEmail(principal.getName());
+        quizManagementService.updateQuiz(lessonId, request, user);
+        return "redirect:/courses/" + courseId + "?updated";
     }
 }

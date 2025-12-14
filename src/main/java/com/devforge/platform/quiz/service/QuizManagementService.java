@@ -73,4 +73,44 @@ public class QuizManagementService {
 
         log.info("Quiz '{}' created with {} questions", lesson.getTitle(), request.getQuestions().size());
     }
+
+    @Transactional
+    public void updateQuiz(Long lessonId, CreateQuizRequest request, User teacher) {
+        // Find lesson
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson not found"));
+        
+        if (!lesson.getCourse().getAuthor().getId().equals(teacher.getId())) {
+            throw new AccessDeniedException("Not authorized");
+        }
+
+        // Update basic information
+        lesson.setTitle(request.getTitle());
+        lesson.setOrderIndex(request.getOrderIndex());
+        lessonRepository.save(lesson);
+
+        // Update questions
+        List<QuizQuestion> oldQuestions = quizQuestionRepository.findAllByLessonId(lessonId);
+        quizQuestionRepository.deleteAll(oldQuestions);
+        quizQuestionRepository.flush(); 
+
+        // Create again
+        for (var qDto : request.getQuestions()) {
+            QuizQuestion question = QuizQuestion.builder()
+                    .text(qDto.getText())
+                    .lesson(lesson)
+                    .build();
+            
+            List<QuizOption> options = qDto.getOptions().stream()
+                    .map(oDto -> QuizOption.builder()
+                            .text(oDto.getText())
+                            .isCorrect(oDto.isCorrect())
+                            .question(question)
+                            .build())
+                    .collect(Collectors.toList());
+            
+            question.setOptions(options);
+            quizQuestionRepository.save(question);
+        }
+    }
 }

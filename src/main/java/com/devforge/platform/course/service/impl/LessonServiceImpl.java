@@ -56,4 +56,24 @@ public class LessonServiceImpl implements LessonService {
         return lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new IllegalArgumentException("Lesson not found with id: " + lessonId));
     }
+
+    @Override
+    @Transactional
+    public void updateLecture(Long lessonId, CreateLessonRequest request, User user) {
+        Lesson lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson not found"));
+
+        // Check author
+        if (!lesson.getCourse().getAuthor().getId().equals(user.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Not authorized");
+        }
+
+        // Update fields
+        lesson.setTitle(request.title());
+        lesson.setContent(request.content());
+        lesson.setVideoUrl(request.videoUrl());
+        lesson.setOrderIndex(request.orderIndex());
+        
+        lessonRepository.save(lesson);
+    }
 }

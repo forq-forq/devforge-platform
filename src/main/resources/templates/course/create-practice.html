@@ -20,8 +20,9 @@
                 </div>
                 <div class="card-body">
                     <!-- URL for POST request -->
-                    <form th:action="@{/courses/{id}/lessons/create/practice(id=${courseId})}" 
-                          th:object="${problem}" method="post" id="practiceForm">
+                    <form th:action="${isEdit} ? @{/courses/{cid}/lessons/{lid}/edit/practice(cid=${courseId}, lid=${lessonId})} 
+                           : @{/courses/{id}/lessons/create/practice(id=${courseId})}" 
+                        th:object="${problem}" method="post" id="practiceForm">
 
                         <!-- === BASIC LESSON INFO === -->
                         <h5 class="text-primary border-bottom pb-2">1. Lesson Details</h5>
@@ -83,16 +84,29 @@
                                         <th>Expected Output</th>
                                         <th style="width: 50px;"></th>
                                     </tr>
-                                </thead>
+                                </thead>               
                                 <tbody id="testsBody">
-                                    <!-- Rows will be added by JS -->
+                                    <tr th:each="tc, stat : *{testCases}">
+                                        <td>
+                                            <input type="text" class="form-control code-font" 
+                                                th:field="*{testCases[__${stat.index}__].inputData}" required>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control code-font" 
+                                                th:field="*{testCases[__${stat.index}__].expectedOutput}" required>
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="this.closest('tr').remove()">×</button>
+                                        </td>
+                                    </tr>
+                                    <!-- New rows will be added automatically by JS -->
                                 </tbody>
                             </table>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-4">
                             <a th:href="@{/courses/{id}/lessons/choose-type(id=${courseId})}" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Create Challenge</button>
+                            <button type="submit" class="btn btn-primary" th:text="${isEdit} ? 'Update Challenge' : 'Create Challenge'">Create</button>
                         </div>
                     </form>
                 </div>
@@ -101,8 +115,15 @@
     </div>
 </div>
 
-<script>
-    let testIndex = 0;
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    let testIndex = /*[[${problem.testCases != null ? problem.testCases.size() : 0}]]*/ 0;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (testIndex === 0) {
+            addTestCase();
+        }
+    });
 
     function addTestCase() {
         const tbody = document.getElementById('testsBody');
@@ -130,6 +151,7 @@
     document.addEventListener("DOMContentLoaded", () => {
         addTestCase();
     });
+    /*]]>*/
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
