@@ -35,7 +35,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (userRepository.count() > 0) {
-            return; // Данные уже есть, не перезаписываем
+            return;
         }
 
         // --- 1. USERS ---

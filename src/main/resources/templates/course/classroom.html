@@ -3,204 +3,225 @@
 <head>
     <title th:text="${currentLesson.title} + ' | ' + ${course.title}">Lesson | DevForge</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <!-- PrismJS & Monaco -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-
+    
     <style>
-        body { overflow-x: hidden; }
-        .sidebar { height: 100vh; overflow-y: auto; border-right: 1px solid #dee2e6; }
-        .lesson-item { cursor: pointer; transition: 0.2s; text-decoration: none; display: block; padding: 10px 15px;}
+        body { overflow-x: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Layout Wrapper */
+        .wrapper { display: flex; flex: 1; overflow: hidden; }
+
+        /* Sidebar Transition */
+        .sidebar {
+            width: 300px;
+            background: #fff;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+            flex-shrink: 0;
+        }
+        
+        .sidebar.collapsed {
+            margin-left: -300px;
+        }
+
+        .content-area {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+        }
+
+        .lesson-item { cursor: pointer; text-decoration: none; display: flex; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #eee; color: #333; }
         .lesson-item:hover { background-color: #f8f9fa; }
-        .lesson-item.active { background-color: #e9ecef; border-left: 4px solid #0d6efd; font-weight: bold; color: #000; }
-        .content-area { padding: 40px; }
+        .lesson-item.active { background-color: #e9ecef; border-left: 4px solid #0d6efd; font-weight: bold; }
+        
         .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin-bottom: 20px; border-radius: 8px;}
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
+        
         .lesson-content img { max-width: 100%; height: auto; border-radius: 5px; margin: 10px 0; }
-        .lesson-content pre { border-radius: 6px; }
-        .lesson-content h2 { margin-top: 1.5rem; }
     </style>
 </head>
 <body>
 
-<div class="container-fluid">
-    <div class="row">
-        
-        <!-- Curriculum -->
-        <div class="col-md-3 p-0 sidebar bg-white">
-            <div class="p-3 border-bottom bg-light">
-                <a href="/my-learning" class="text-decoration-none text-secondary mb-2 d-block">&larr; Back to Dashboard</a>
-                <h5 class="m-0 text-truncate" th:text="${course.title}">Course Name</h5>
-            </div>
-            
-            <div class="list-group list-group-flush">
-                <a th:each="lesson, iter : ${lessons}"
-                   th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${lesson.id})}"
-                   class="lesson-item border-bottom"
-                   th:classappend="${lesson.id == currentLesson.id} ? 'active' : ''">
-                   <div>
-                        <small class="text-muted me-2" th:text="${iter.count} + '.'">1.</small>
-                        <span th:text="${lesson.title}">Lesson Title</span>
-                   </div>
-                    <span th:if="${#lists.contains(completedLessonIds, lesson.id)}" class="text-success">✔</span>
-                </a>
-            </div>
-        </div>
+<!-- Navbar (Optional, can be removed for immersive mode) -->
+<div th:replace="~{layout/nav :: header}"></div>
 
-        <!-- Main Content -->
-        <div class="col-md-9 content-area">
-            
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 th:text="${currentLesson.title}">Title</h2>
+<div class="wrapper">
+    
+    <!-- SIDEBAR -->
+    <div id="sidebar" class="sidebar">
+        <div class="p-3 border-bottom bg-light d-flex justify-content-between align-items-center">
+            <h5 class="m-0 text-truncate" style="max-width: 220px;" th:text="${course.title}">Course Name</h5>
+        </div>
+        
+        <div class="list-group list-group-flush">
+            <a th:href="${isAuthor} ? @{/courses/{id}(id=${course.id})} : @{/my-learning}" 
+               class="p-3 text-decoration-none text-secondary d-block border-bottom bg-light small">
+               &larr; <span th:text="${isAuthor ? 'Back to Course Manager' : 'Back to Dashboard'}">Back</span>
+            </a>
+
+            <a th:each="lesson, iter : ${lessons}"
+               th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${lesson.id})}"
+               class="lesson-item"
+               th:classappend="${lesson.id == currentLesson.id} ? 'active' : ''">
+                <div class="d-flex align-items-center">
+                    <span class="text-muted me-2 small" th:text="${iter.count} + '.'">1.</span>
+                    <span th:text="${lesson.title}" class="text-truncate" style="max-width: 180px;">Lesson Title</span>
+                </div>
+                <!-- Problem solved sign (only for students) -->
+                <span th:if="${!isAuthor and #lists.contains(completedLessonIds, lesson.id)}" class="text-success">✔</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="content-area">
+        
+        <!-- HEADER: Toggle & Navigation -->
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-outline-secondary btn-sm" onclick="toggleSidebar()" title="Toggle Sidebar">
+                    ☰
+                </button>
+                <h2 class="h4 m-0" th:text="${currentLesson.title}">Introduction</h2>
+            </div>
+
+            <!-- NAVIGATION BUTTONS (TOP RIGHT) -->
+            <div class="d-flex gap-2">
+                <!-- PREVIOUS -->
+                <a th:if="${prevLessonId}" 
+                   th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${prevLessonId})}" 
+                   class="btn btn-outline-secondary">Previous</a>
+                <button th:unless="${prevLessonId}" class="btn btn-outline-secondary" disabled>Previous</button>
+
+                <!-- NEXT / FINISH LOGIC -->
                 
-                <!-- Navigation (Only show Next if it's a Lecture or already completed) -->
-                <div class="d-flex gap-2">
-                    <a th:if="${prevLessonId}" th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${prevLessonId})}" 
-                       class="btn btn-outline-secondary">Previous</a>
-                       
-                    <!-- For Lectures: Manual Complete -->
-                    <form th:if="${currentLesson.type.name() == 'LECTURE'}" 
+                <th:block th:if="${isAuthor}">
+                    <a th:if="${nextLessonId}" 
+                       th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
+                       class="btn btn-primary">Next &rarr;</a>
+                    <a th:unless="${nextLessonId}" href="/courses/my" class="btn btn-success">Finish (Preview)</a>
+                </th:block>
+
+                <th:block th:unless="${isAuthor}">
+                    
+                    <!-- LECTURE: Button-form "Mark Complete" -->
+                    <form th:if="${currentLesson.type.name() == 'LECTURE'}"
                           th:action="@{/learn/{cid}/lecture/{lid}/complete(cid=${course.id}, lid=${currentLesson.id})}" method="post">
                         <button th:if="${nextLessonId}" type="submit" class="btn btn-primary">Next &rarr;</button>
-                        <button th:unless="${nextLessonId}" type="submit" class="btn btn-success">Finish Course</button>
+                        <button th:unless="${nextLessonId}" type="submit" class="btn btn-success">Finish Course 🏆</button>
                     </form>
 
-                    <!-- For Practice: Next button appears only after success (handled by JS) -->
-                    <a th:if="${currentLesson.type.name() == 'PRACTICE' and nextLessonId != null}" 
-                        id="nextBtn"
-                        th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
-                        class="btn btn-primary disabled">Next &rarr;</a>
-                </div>
-            </div>
-
-            <!-- === LECTURE === -->
-            <div th:if="${currentLesson.type.name() == 'LECTURE'}">
-                <div th:if="${currentLesson.videoUrl}" class="video-container shadow-sm">
-                    <iframe th:src="${currentLesson.videoUrl}" frameborder="0" allowfullscreen></iframe>
-                </div>
-                <div class="card shadow-sm border-0">
-                    <div class="card-body lesson-content">
-                        <div th:utext="${htmlContent}"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- === PRACTICE === -->
-            <div th:if="${currentLesson.type.name() == 'PRACTICE'}" class="h-100">
-                
-                <!-- Task Description (Task text) -->
-                <div class="card shadow-sm border-0 mb-3">
-                    <div class="card-header bg-white fw-bold">
-                        📋 Task Description
-                    </div>
-                    <div class="card-body lesson-content">
-                        <div th:utext="${htmlContent}"></div>
-                    </div>
-                </div>
-
-                <!-- Editor Instructions -->
-                <div class="alert alert-info py-2">
-                    <small>Write your Java code below. The class name must match the problem definition.</small>
-                </div>
-
-                <!-- Code Editor Container -->
-                <div id="editor-container" style="height: 500px; border: 1px solid #ccc;"></div>
-
-                <!-- Controls -->
-                <div class="mt-3 d-flex justify-content-between align-items-center mb-5">
-                    <div id="result-message" class="fw-bold"></div>
-                    
-                    <div class="d-flex gap-2">
-                        <button id="runBtn" class="btn btn-success px-4" onclick="runCode()">Run Code ▶</button>
-                        
-                        <!-- Button NEXT (if there exists next lesson) -->
-                        <a th:if="${nextLessonId != null}" 
-                           id="practiceNextBtn"
+                    <!-- PRACTICE/QUIZ: Link that can be activated by JS -->
+                    <th:block th:if="${currentLesson.type.name() == 'PRACTICE' or currentLesson.type.name() == 'QUIZ'}">
+                        <a th:if="${nextLessonId}" 
+                           id="navNextBtn"
                            th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
-                           class="btn btn-secondary disabled">Next Lesson &rarr;</a>
-
-                        <!-- Button FINISH (if it is last lesson) -->
-                        <a th:if="${nextLessonId == null}" 
-                           id="practiceFinishBtn"
+                           class="btn btn-secondary disabled">Next &rarr;</a>
+                        
+                        <a th:unless="${nextLessonId}" 
+                           id="navFinishBtn"
                            href="/my-learning" 
                            class="btn btn-secondary disabled">Finish Course 🏆</a>
+                    </th:block>
+
+                </th:block>
+            </div>
+        </div>
+
+        <!-- CONTENT BODY -->
+        
+        <!-- === LECTURE === -->
+        <div th:if="${currentLesson.type.name() == 'LECTURE'}">
+            <div th:if="${currentLesson.videoUrl}" class="video-container shadow-sm">
+                <iframe th:src="${currentLesson.videoUrl}" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <div class="card shadow-sm border-0">
+                <div class="card-body lesson-content">
+                    <div th:utext="${htmlContent}"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === PRACTICE === -->
+        <div th:if="${currentLesson.type.name() == 'PRACTICE'}" class="h-100">
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header bg-white fw-bold">📋 Task Description</div>
+                <div class="card-body lesson-content">
+                    <div th:utext="${htmlContent}"></div>
+                </div>
+            </div>
+
+            <div id="editor-container" style="height: 500px; border: 1px solid #ccc;"></div>
+            
+            <div class="mt-3 d-flex justify-content-between align-items-center mb-5">
+                <div id="result-message" class="fw-bold"></div>
+                <button id="runBtn" class="btn btn-success px-4" onclick="runCode()">Run Code ▶</button>
+            </div>
+
+            <input type="hidden" id="starterCode" th:value="${problem != null ? problem.starterCode : ''}">
+        </div>
+
+        <!-- === QUIZ === -->
+        <div th:if="${currentLesson.type.name() == 'QUIZ'}" class="h-100">
+            <h3 class="mb-4">🧠 Knowledge Check</h3>
+            <form id="quizForm">
+                <div th:each="question, qStat : ${quizQuestions}" class="card mb-4 shadow-sm">
+                    <div class="card-header bg-white fw-bold">
+                        <span th:text="${qStat.count} + '. ' + ${question.text}">1. Question</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <label th:each="option : ${question.options}" class="list-group-item list-group-item-action">
+                                <input class="form-check-input me-1" type="radio" 
+                                       th:name="'answers[' + ${question.id} + ']'" 
+                                       th:value="${option.id}" required>
+                                <span th:text="${option.text}">Option</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Hidden inputs -->
-                <input type="hidden" id="starterCode" th:value="${problem != null ? problem.starterCode : ''}">
-            </div>
-
-            <!-- === QUIZ === -->
-            <div th:if="${currentLesson.type.name() == 'QUIZ'}" class="h-100">
-                
-                <h3 class="mb-4">🧠 Knowledge Check</h3>
-                
-                <form th:action="@{/api/quiz/{lessonId}/submit(lessonId=${currentLesson.id})}" method="post" id="quizForm">
-                    
-                    <div th:each="question, qStat : ${quizQuestions}" class="card mb-4 shadow-sm">
-                        <div class="card-header bg-white fw-bold">
-                            <span th:text="${qStat.count} + '. ' + ${question.text}">1. Question Text</span>
-                        </div>
-                        <div class="card-body">
-                            <div class="list-group">
-                                <label th:each="option : ${question.options}" class="list-group-item list-group-item-action">
-                                    <input class="form-check-input me-1" type="radio" 
-                                           th:name="'answers[' + ${question.id} + ']'" 
-                                           th:value="${option.id}" required>
-                                    <span th:text="${option.text}">Option A</span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-end align-items-center gap-2 mb-5">
-                         <!-- Check button (hidden by defulat) -->
-                         <button type="button" id="quizSubmitBtn" class="btn btn-primary btn-lg" onclick="submitQuiz()">Submit Answers</button>
-                         
-                         <!-- Button NEXT -->
-                         <a th:if="${nextLessonId != null}" 
-                            id="quizNextBtn"
-                            th:href="@{/learn/{cid}/lecture/{lid}(cid=${course.id}, lid=${nextLessonId})}" 
-                            class="btn btn-primary btn-lg d-none">Next Lesson &rarr;</a>
-
-                         <!-- Button FINISH -->
-                         <a th:if="${nextLessonId == null}" 
-                            id="quizFinishBtn"
-                            href="/my-learning" 
-                            class="btn btn-success btn-lg d-none">Finish Course 🏆</a>
-                    </div>
-                    
-                    <div id="quiz-result" class="alert d-none mt-3"></div>
-                </form>
-            </div>
-
-            <input type="hidden" id="lessonId" th:value="${currentLesson.id}">
-
+                <div class="d-flex justify-content-end mb-5">
+                     <button type="button" id="quizSubmitBtn" class="btn btn-primary btn-lg" onclick="submitQuiz()">Submit Answers</button>
+                </div>
+                <div id="quiz-result" class="alert d-none mt-3"></div>
+            </form>
         </div>
+
+        <!-- GLOBAL INPUTS -->
+        <input type="hidden" id="lessonId" th:value="${currentLesson.id}">
+
     </div>
 </div>
 
+<!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
-    // Only init editor if we are in PRACTICE mode
-    const isPractice = /*[[${currentLesson.type.name() == 'PRACTICE'}]]*/ false;
     
-    let editor;
+    // --- SIDEBAR TOGGLE ---
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+    }
 
+    // --- VARIABLES ---
+    const lessonType = /*[[${currentLesson.type.name()}]]*/ 'LECTURE';
+    const isPractice = lessonType === 'PRACTICE';
+    const isStudent = /*[[${!isAuthor}]]*/ true; // Teacher = false, Student = true
+
+    // --- MONACO EDITOR ---
+    let editor;
     if (isPractice) {
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
-        
         require(['vs/editor/editor.main'], function() {
-            const starterCode = document.getElementById('starterCode').value;
-            
+            const starterCodeEl = document.getElementById('starterCode');
+            const starterCode = starterCodeEl ? starterCodeEl.value : "// Error loading code";
             editor = monaco.editor.create(document.getElementById('editor-container'), {
                 value: starterCode,
                 language: 'java',
@@ -210,32 +231,42 @@
         });
     }
 
+    // --- UNLOCK NAVIGATION (Helper) ---
+    function unlockNextButton() {
+        if (!isStudent) return; 
+
+        const nextBtn = document.getElementById('navNextBtn');
+        const finishBtn = document.getElementById('navFinishBtn');
+
+        if (nextBtn) {
+            nextBtn.classList.remove('disabled', 'btn-secondary');
+            nextBtn.classList.add('btn-primary');
+        }
+        if (finishBtn) {
+            finishBtn.classList.remove('disabled', 'btn-secondary');
+            finishBtn.classList.add('btn-success');
+        }
+    }
+
+    // --- RUN CODE (PRACTICE) ---
     function runCode() {
         if (!editor) return;
-        
         const code = editor.getValue();
         const lessonId = document.getElementById('lessonId').value;
         const resultDiv = document.getElementById('result-message');
         const runBtn = document.getElementById('runBtn');
-        const nextBtn = document.getElementById('nextBtn'); // Might be null if last lesson
 
-        // UI Loading state
         runBtn.disabled = true;
         runBtn.innerText = "Running...";
         resultDiv.className = "text-muted";
-        resultDiv.innerText = "Compiling and testing...";
+        resultDiv.innerText = "Compiling...";
 
-        // AJAX Request
         fetch(`/api/practice/${lessonId}/run`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // Add CSRF token if Spring Security requires it (often needed for POST)
-                // 'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content 
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code: code })
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             runBtn.disabled = false;
             runBtn.innerText = "Run Code ▶";
@@ -243,84 +274,48 @@
             if (data.success) {
                 resultDiv.className = "text-success fw-bold";
                 resultDiv.innerText = data.message;
-                
-                // Execute Next
-                const pNext = document.getElementById('practiceNextBtn');
-                if (pNext) {
-                    pNext.classList.remove("disabled", "btn-secondary");
-                    pNext.classList.add("btn-primary");
-                }
-                
-                // Execute Finish
-                const pFinish = document.getElementById('practiceFinishBtn');
-                if (pFinish) {
-                    pFinish.classList.remove("disabled", "btn-secondary");
-                    pFinish.classList.add("btn-success");
-                }
+                unlockNextButton();
             } else {
                 resultDiv.className = "text-danger fw-bold";
-                resultDiv.innerText = data.message;
+                resultDiv.innerText = data.message || "Compilation failed";
             }
         })
         .catch(err => {
-            console.error(err);
             runBtn.disabled = false;
-            runBtn.innerText = "Run Code ▶";
-            resultDiv.className = "text-danger";
-            resultDiv.innerText = "Server error occurred.";
+            resultDiv.innerText = "Error: " + err;
         });
     }
 
+    // --- SUBMIT QUIZ ---
     function submitQuiz() {
         const lessonId = document.getElementById('lessonId').value;
         const resultDiv = document.getElementById('quiz-result');
         const form = document.getElementById('quizForm');
         
-        // Collect data in form
         const formData = new FormData(form);
         const answers = {};
-        
         for (let [key, value] of formData.entries()) {
-            // regex for finding the id of question
             const match = key.match(/\[(\d+)\]/);
-            if (match && match[1]) {
-                const questionId = match[1];
-                answers[questionId] = parseInt(value);
-            }
+            if (match && match[1]) answers[match[1]] = parseInt(value);
         }
 
-        // Send request
         fetch(`/api/quiz/${lessonId}/submit`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ answers: answers })
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
-            // Show results
             resultDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
             resultDiv.classList.add(data.passed ? 'alert-success' : 'alert-danger');
             resultDiv.innerText = data.message;
             
             if (data.passed) {
-                // Hide SUBMIT
                 document.getElementById('quizSubmitBtn').classList.add('d-none');
-
-                // Show button NEXT
-                const qNext = document.getElementById('quizNextBtn');
-                if (qNext) qNext.classList.remove('d-none');
-
-                // Show button FINISH
-                const qFinish = document.getElementById('quizFinishBtn');
-                if (qFinish) qFinish.classList.remove('d-none');
+                unlockNextButton();
             }
         })
-        .catch(err => {
-            console.error(err);
-            alert("Error submitting quiz");
-        });
+        .catch(err => console.error(err));
     }
     /*]]>*/
 </script>

@@ -6,6 +6,7 @@ import com.devforge.platform.quiz.domain.QuizQuestion;
 import com.devforge.platform.quiz.repository.QuizQuestionRepository;
 import com.devforge.platform.quiz.web.dto.QuizSubmissionRequest;
 import com.devforge.platform.quiz.web.dto.QuizSubmissionResult;
+import com.devforge.platform.user.domain.Role;
 import com.devforge.platform.user.domain.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class QuizGradingService {
     private static final int PASS_THRESHOLD = 70; // passing threshold
 
     @Transactional
-    public QuizSubmissionResult gradeQuiz(Long lessonId, QuizSubmissionRequest request, User student) {
+    public QuizSubmissionResult gradeQuiz(Long lessonId, QuizSubmissionRequest request, User user) {
         // Upload all the questions
         List<QuizQuestion> questions = quizQuestionRepository.findAllByLessonId(lessonId);
         
@@ -36,12 +37,11 @@ public class QuizGradingService {
         int correctCount = 0;
         Map<Long, Long> studentAnswers = request.answers();
 
-        // Check answers with correct ones in db
+        // Check answers
         for (QuizQuestion question : questions) {
             Long selectedOptionId = studentAnswers.get(question.getId());
 
             if (selectedOptionId != null) {
-                // Find chosen user's answer
                 boolean isCorrect = question.getOptions().stream()
                         .filter(opt -> opt.getId().equals(selectedOptionId))
                         .findFirst()
@@ -58,9 +58,12 @@ public class QuizGradingService {
         int scorePercent = (int) (((double) correctCount / totalQuestions) * 100);
         boolean passed = scorePercent >= PASS_THRESHOLD;
 
-        // If passed - lesson complete
+        // Return result
         if (passed) {
-            enrollmentService.markLessonAsComplete(student, questions.get(0).getLesson().getCourse().getId(), lessonId);
+            if (user.getRole() == Role.STUDENT) {
+                enrollmentService.markLessonAsComplete(user, questions.get(0).getLesson().getCourse().getId(), lessonId);
+            }
+            
             return new QuizSubmissionResult(true, scorePercent, "Great job! You passed with " + scorePercent + "%. 🏆");
         } else {
             return new QuizSubmissionResult(false, scorePercent, "You scored " + scorePercent + "%. You need " + PASS_THRESHOLD + "% to pass. Try again! ❌");

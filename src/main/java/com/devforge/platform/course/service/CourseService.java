@@ -42,4 +42,14 @@ public interface CourseService {
      * @throws IllegalArgumentException if course not found or not published.
      */
     Course getPublishedCourseById(Long courseId);
+
+    /**
+     * Retrieves any course by its ID.
+     */
+    public Course getCourseById(Long courseId);
+
+    /**
+     * Allows to update course main information.
+     */
+    void updateCourseInfo(Long courseId, CreateCourseRequest request, org.springframework.web.multipart.MultipartFile file, User actor);
 }

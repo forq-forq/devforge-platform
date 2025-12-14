@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Represents an educational course in the platform.
@@ -30,6 +31,11 @@ public class Course {
      * Detailed description of what students will learn.
      * Stored as TEXT in database to allow long content.
      */
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @OrderBy("orderIndex ASC")
+    private List<Lesson> lessons;
+    
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -40,6 +46,10 @@ public class Course {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CourseStatus status;
+
+    @Lob 
+    @Column(columnDefinition = "TEXT") 
+    private String coverImage; // Format: "data:image/png;base64,iVBORw0KGgoAAA..."
 
     /**
      * The teacher who created the course.
