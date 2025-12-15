@@ -51,7 +51,8 @@
                         Short description...
                     </p>
                     <p class="small text-secondary mb-3">
-                        By <span th:text="${course.author.fullName}">Author Name</span>
+                        By <a th:href="@{/u/{id}(id=${course.author.id})}" class="text-decoration-none text-secondary fw-bold" 
+                            th:text="${course.author.fullName}">Author</a>
                     </p>
                 </div>        
                     <div class="card-footer bg-white border-top-0 d-flex gap-2">
