@@ -3,33 +3,28 @@ spring:
     name: devforge-platform
 
   datasource:
-    url: jdbc:h2:mem:devforgedb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: password
-  
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/devforgedb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driverClassName: org.postgresql.Driver
+
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-  
-  thymeleaf:
-    cache: false
-    
   servlet:
     multipart:
       max-file-size: 5MB
       max-request-size: 5MB
-  
+
 gemini:
-  api-key: GEMINI_API_KEY
+  api-key: ${GEMINI_API_KEY:"AIzaSyCD1fzvq0yPLGm52oKp8Q_tAIgW-siwvTA"}
   url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
