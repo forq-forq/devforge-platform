@@ -52,6 +52,17 @@ public class User implements UserDetails {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String bio;
+
+    private String githubUrl;
+    private String linkedinUrl;
+    private String websiteUrl;
+
+    public String getAvatarUrl() {
+        return "https://api.dicebear.com/7.x/notionists/svg?seed=" + (this.email != null ? this.email : "guest");
+    }
+
     /**
      * Automatically sets the creation timestamp before persisting.
      */
