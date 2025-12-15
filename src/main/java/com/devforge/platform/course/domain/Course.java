@@ -6,6 +6,8 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode; 
+import java.sql.Types; 
 
 /**
  * Represents an educational course in the platform.
@@ -37,6 +39,7 @@ public class Course {
     private List<Lesson> lessons;
     
     @Column(columnDefinition = "TEXT")
+    @JdbcTypeCode(Types.LONGVARCHAR)
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -48,6 +51,7 @@ public class Course {
     private CourseStatus status;
 
     @Column(columnDefinition = "TEXT") 
+    @JdbcTypeCode(Types.LONGVARCHAR)
     private String coverImage; // Format: "data:image/png;base64,iVBORw0KGgoAAA..."
 
     /**
