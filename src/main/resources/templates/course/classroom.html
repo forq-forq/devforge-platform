@@ -212,7 +212,9 @@
                         <img th:src="${comment.user.avatarUrl}" width="40" height="40" class="rounded-circle border">
                         <div>
                             <div class="mb-1">
-                                <span class="fw-bold me-1" th:text="${comment.user.fullName}">Name</span>
+                                <a th:href="@{/u/{id}(id=${comment.user.id})}" 
+                                   class="fw-bold me-1 text-decoration-none text-dark" 
+                                   th:text="${comment.user.fullName}">Name</a>
                                 <span class="badge bg-secondary" th:if="${comment.user.role.name() == 'TEACHER'}">INSTRUCTOR</span>
                                 <small class="text-muted ms-2" th:text="${#temporals.format(comment.createdAt, 'dd MMM HH:mm')}">Time</small>
                             </div>

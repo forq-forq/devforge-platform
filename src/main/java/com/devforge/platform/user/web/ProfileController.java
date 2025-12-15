@@ -22,6 +22,8 @@ public class ProfileController {
     private final UserService userService;
     private final EnrollmentService enrollmentService;
     private final CourseService courseService;
+    private final com.devforge.platform.enrollment.repository.EnrollmentRepository enrollmentRepository;
+private final com.devforge.platform.review.repository.CourseReviewRepository reviewRepository;
 
     @GetMapping("/profile")
     @PreAuthorize("isAuthenticated()")
@@ -34,6 +36,12 @@ public class ProfileController {
             model.addAttribute("enrollments", enrollmentService.getStudentEnrollments(user));
         } else if (user.getRole() == com.devforge.platform.user.domain.Role.TEACHER) {
             model.addAttribute("createdCourses", courseService.getCoursesByAuthor(user));
+
+            Long totalStudents = enrollmentRepository.countTotalStudentsByAuthorId(user.getId());
+            Double instructorRating = reviewRepository.getAverageRatingByAuthor(user.getId());
+            
+            model.addAttribute("totalStudents", totalStudents != null ? totalStudents : 0);
+            model.addAttribute("instructorRating", instructorRating != null ? Math.round(instructorRating * 10.0) / 10.0 : 0.0);
         }
 
         // Modify current field
