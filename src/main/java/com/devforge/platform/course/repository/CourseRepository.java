@@ -24,4 +24,10 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
      * Used for the teacher's dashboard.
      */
     List<Course> findAllByAuthorId(Long authorId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM Course c WHERE c.status = 'PUBLISHED' " +
+            "AND (:keyword IS NULL OR LOWER(c.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "OR LOWER(c.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:level IS NULL OR c.level = :level)")
+    List<Course> searchCourses(String keyword, com.devforge.platform.course.domain.CourseLevel level);
 }

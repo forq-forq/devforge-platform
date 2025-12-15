@@ -1,6 +1,7 @@
 package com.devforge.platform.course.service.impl;
 
 import com.devforge.platform.course.domain.Course;
+import com.devforge.platform.course.domain.CourseLevel;
 import com.devforge.platform.course.domain.CourseStatus;
 import com.devforge.platform.course.repository.CourseRepository;
 import com.devforge.platform.course.service.CourseService;
@@ -108,5 +109,11 @@ public class CourseServiceImpl implements CourseService {
         }
 
         courseRepository.save(course);
+    }
+
+    @Override
+    public List<Course> searchCourses(String keyword, CourseLevel level) {
+        String searchTerm = (keyword != null && !keyword.isBlank()) ? keyword : null;
+        return courseRepository.searchCourses(searchTerm, level);
     }
 }

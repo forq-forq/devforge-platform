@@ -52,4 +52,6 @@ public interface CourseService {
      * Allows to update course main information.
      */
     void updateCourseInfo(Long courseId, CreateCourseRequest request, org.springframework.web.multipart.MultipartFile file, User actor);
+
+    List<Course> searchCourses(String keyword, com.devforge.platform.course.domain.CourseLevel level);
 }
