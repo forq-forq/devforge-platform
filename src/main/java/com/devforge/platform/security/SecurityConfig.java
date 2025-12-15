@@ -59,7 +59,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.ignoringRequestMatchers(
                 "/h2-console/**", 
                 "/api/practice/**", 
-                "/api/quiz/**"
+                "/api/quiz/**",
+                "/api/ai/**"
             ))
             .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
