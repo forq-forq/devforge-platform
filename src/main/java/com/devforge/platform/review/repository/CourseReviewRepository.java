@@ -14,7 +14,7 @@ public interface CourseReviewRepository extends JpaRepository<CourseReview, Long
     List<CourseReview> findAllByCourseIdOrderByCreatedAtDesc(Long courseId);
 
     // Check if alreade reviewed course
-    boolean existsByUserIdAndCourseId(Long userId, Long courseId);
+    boolean existsByStudentIdAndCourseId(Long studentId, Long courseId);
 
     // Calculate average
     @Query("SELECT AVG(r.rating) FROM CourseReview r WHERE r.course.id = :courseId")

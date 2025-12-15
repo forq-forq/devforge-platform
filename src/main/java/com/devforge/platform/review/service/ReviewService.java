@@ -32,7 +32,7 @@ public class ReviewService {
         }
 
         // Check if already reviewed
-        if (reviewRepository.existsByUserIdAndCourseId(student.getId(), courseId)) {
+        if (reviewRepository.existsByStudentIdAndCourseId(student.getId(), courseId)) {
             throw new IllegalArgumentException("You have already reviewed this course.");
         }
 
