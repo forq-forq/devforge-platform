@@ -3,6 +3,8 @@ package com.devforge.platform.course.domain;
 import com.devforge.platform.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -37,6 +39,7 @@ public class Course {
     private List<Lesson> lessons;
     
     @Column(columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     private String description;
 
     @Enumerated(EnumType.STRING)
@@ -47,8 +50,8 @@ public class Course {
     @Column(nullable = false)
     private CourseStatus status;
 
-    @Lob 
     @Column(columnDefinition = "TEXT") 
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
     private String coverImage; // Format: "data:image/png;base64,iVBORw0KGgoAAA..."
 
     /**
