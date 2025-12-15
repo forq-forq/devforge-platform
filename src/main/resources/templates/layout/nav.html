@@ -32,11 +32,16 @@
                 </div>
 
                 <!-- For Authtorized -->
-                <div sec:authorize="isAuthenticated()">
-                    <span class="navbar-text text-light me-3">
-                        <small>User: <span sec:authentication="name">email@example.com</span></small>
-                    </span>
-                    <!-- Exit button (Form POST) - Remove error 404 -->
+                <div sec:authorize="isAuthenticated()" class="d-flex align-items-center gap-3">
+                    
+                    <!-- Profile Link with Avatar -->
+                    <a href="/profile" class="text-decoration-none text-light d-flex align-items-center gap-2">
+                        <img th:src="'https://api.dicebear.com/9.x/notionists/svg?seed=' + ${#authentication.name}" 
+                             width="32" height="32" class="rounded-circle bg-light border">
+                        <span sec:authentication="name" class="d-none d-md-inline">User</span>
+                    </a>
+
+                    <!-- Logout -->
                     <form th:action="@{/logout}" method="post" style="display:inline;">
                         <button type="submit" class="btn btn-outline-danger btn-sm">Logout</button>
                     </form>

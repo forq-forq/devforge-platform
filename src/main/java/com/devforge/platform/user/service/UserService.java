@@ -2,6 +2,7 @@ package com.devforge.platform.user.service;
 
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.web.dto.RegisterRequest;
+import com.devforge.platform.user.web.dto.UpdateProfileRequest;
 
 /**
  * Business Logic Interface for User management.
@@ -25,4 +26,6 @@ public interface UserService {
      * @throws org.springframework.security.core.userdetails.UsernameNotFoundException if not found.
      */
     User getByEmail(String email);
+
+    void updateProfile(Long userId, UpdateProfileRequest request);
 }

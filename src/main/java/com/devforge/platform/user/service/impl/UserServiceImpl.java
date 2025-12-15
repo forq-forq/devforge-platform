@@ -5,8 +5,11 @@ import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.repository.UserRepository;
 import com.devforge.platform.user.service.UserService;
 import com.devforge.platform.user.web.dto.RegisterRequest;
+import com.devforge.platform.user.web.dto.UpdateProfileRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,5 +73,24 @@ public class UserServiceImpl implements UserService {
     public User getByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new org.springframework.security.core.userdetails.UsernameNotFoundException("User not found: " + email));
+    }
+
+    @Override
+    @Transactional
+    public void updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + userId));
+
+        // Update fields
+        user.setFullName(request.getFullName());
+        user.setBio(request.getBio());
+        
+        // Optional links
+        user.setGithubUrl(request.getGithubUrl());
+        user.setLinkedinUrl(request.getLinkedinUrl());
+        user.setWebsiteUrl(request.getWebsiteUrl());
+
+        userRepository.save(user);
+        log.info("Profile updated for user: {}", user.getEmail());
     }
 }

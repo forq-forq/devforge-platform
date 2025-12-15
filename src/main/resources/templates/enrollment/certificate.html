@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Certificate of Completion</title>
+    <!-- Add font styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Great+Vibes&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Certificate container (A4 Landscape proportions) */
+        .certificate-container {
+            width: 1000px;
+            height: 700px;
+            background-color: #fff;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            color: #333;
+            border: 20px solid #fff;
+            outline: 5px solid #c5a059; /* Golden style */
+        }
+
+        /* Decorative corners */
+        .corner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 2px solid #c5a059;
+        }
+        .top-left { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+        .top-right { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+        .bottom-right { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+
+        /* Typography */
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 48px;
+            margin-top: 60px;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            margin-bottom: 40px;
+            color: #7f8c8d;
+        }
+
+        .student-name {
+            font-family: 'Great Vibes', cursive;
+            font-size: 80px;
+            color: #c5a059; /* Gold */
+            margin: 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            display: inline-block;
+            min-width: 400px;
+        }
+
+        .course-title {
+            font-family: 'Cinzel', serif;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .description {
+            font-size: 18px;
+            color: #555;
+            max-width: 700px;
+            margin: 0 auto 60px auto;
+            line-height: 1.6;
+        }
+
+        /* Signs */
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 80px;
+            padding: 0 100px;
+        }
+
+        .signature-block {
+            text-align: center;
+        }
+
+        .signature-line {
+            width: 200px;
+            border-top: 1px solid #333;
+            margin-bottom: 10px;
+        }
+
+        .signature-text {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .signature-img {
+            height: 50px;
+            margin-bottom: -10px;
+            font-family: 'Great Vibes', cursive;
+            font-size: 30px;
+            color: #2c3e50;
+        }
+
+        /* Logo */
+        .logo {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            color: #ddd;
+            font-size: 24px;
+        }
+
+        /* PRINT Button */
+        .print-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0d6efd;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .print-btn:hover { transform: scale(1.05); }
+
+        @media print {
+            body { background: none; }
+            .print-btn { display: none; }
+            .certificate-container { box-shadow: none; margin: 0; border: 5px solid #c5a059; width: 100%; height: 100vh;}
+            @page { size: landscape; margin: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="certificate-container">
+        <!-- Frames -->
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+
+        <!-- Content -->
+        <h1>Certificate of Completion</h1>
+        <div class="subtitle">This is to certify that</div>
+
+        <div class="student-name" th:text="${student.fullName}">John Doe</div>
+
+        <div class="subtitle">has successfully completed the course</div>
+
+        <div class="course-title" th:text="${course.title}">Java Algorithms: The Beginning</div>
+
+        <p class="description">
+            Demonstrating commitment to excellence and mastery of the subject matter via the DevForge Learning Platform.
+        </p>
+
+        <!-- Signs -->
+        <div class="footer">
+            <div class="signature-block">
+                <div class="signature-img" th:text="${course.author.fullName}">Dr. Gosling</div>
+                <div class="signature-line"></div>
+                <div class="signature-text">Instructor</div>
+            </div>
+
+            <div class="signature-block">
+                <div class="signature-img" th:text="${date}">Dec 15, 2025</div>
+                <div class="signature-line"></div>
+                <div class="signature-text">Date</div>
+            </div>
+        </div>
+
+        <div class="logo">DevForge Platform</div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">🖨 Print / Save as PDF</button>
+
+</body>
+</html>
