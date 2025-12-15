@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * Service responsible for compiling and running student code.
@@ -28,46 +29,45 @@ public class CodeExecutionService {
      * @return true if all tests pass, false otherwise.
      */
     public boolean execute(String userCode, Problem problem) {
-        log.info("Compiling user code for problem: {}", problem.getMethodName());
+    log.info("Compiling user code for problem: {}", problem.getMethodName());
 
-        try {
-            // 1. Compile source code in memory
-            Class<?> compiledClass = compile(problem.getClassName(), userCode);
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    try {
+        Class<?> compiledClass = compile(problem.getClassName(), userCode);
+        Object instance = compiledClass.getDeclaredConstructor().newInstance();
+        Class<?>[] paramTypes = parseSignature(problem.getMethodSignature());
+        Method method = compiledClass.getMethod(problem.getMethodName(), paramTypes);
+
+        for (TestCase test : problem.getTestCases()) {
+            Object[] args = parseInput(test.getInputData(), paramTypes);
+
+            // Run with timeout
+            Future<Object> future = executor.submit(() -> method.invoke(instance, args));
             
-            // 2. Instantiate the class (equivalent to: new Solution())
-            Object instance = compiledClass.getDeclaredConstructor().newInstance();
-
-            // 3. Resolve the method to test using reflection
-            // TODO: Enhance signature parsing to support arrays and other types.
-            Class<?>[] paramTypes = parseSignature(problem.getMethodSignature());
-            Method method = compiledClass.getMethod(problem.getMethodName(), paramTypes);
-
-            // 4. Run through all test cases
-            for (TestCase test : problem.getTestCases()) {
-                // Convert string input (e.g., "5, 10") to actual objects
-                Object[] args = parseInput(test.getInputData(), paramTypes);
-                
-                // Invoke the method
-                Object result = method.invoke(instance, args);
-                
-                // Verify the result
-                String actual = String.valueOf(result);
-                if (!actual.equals(test.getExpectedOutput())) {
-                    log.warn("Test failed for input: {}. Expected: {}, Actual: {}", 
-                            test.getInputData(), test.getExpectedOutput(), actual);
-                    return false; // Fail immediately on first error
-                }
+            Object result;
+            try {
+                result = future.get(2, TimeUnit.SECONDS); // Wait max 2 sec
+            } catch (TimeoutException e) {
+                future.cancel(true);
+                log.warn("Time Limit Exceeded for input: {}", test.getInputData());
+                return false; 
             }
-            
-            log.info("All tests passed successfully for problem id: {}", problem.getId());
-            return true;
 
-        } catch (Exception e) {
-            log.error("Execution failed due to compilation or runtime error", e);
-            // In a real app, we should return a structured error message to the user
-            return false;
+            String actual = String.valueOf(result);
+            if (!actual.equals(test.getExpectedOutput())) {
+                return false;
+            }
         }
+        return true;
+
+    } catch (Exception e) {
+        log.error("Error", e);
+        return false;
+    } finally {
+        executor.shutdownNow();
     }
+}
 
     /**
      * Uses the standard Java Compiler API to compile source code from a String
