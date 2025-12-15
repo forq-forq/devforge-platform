@@ -65,11 +65,16 @@ public class CourseController {
      * Calculates which courses the current user is already enrolled in.
      */
     @GetMapping
-    public String listCourses(Model model, Principal principal) {
-        model.addAttribute("courses", courseService.getAllPublishedCourses());
+    public String listCourses(@RequestParam(required = false) String keyword,
+                              @RequestParam(required = false) com.devforge.platform.course.domain.CourseLevel level,
+                              Model model, 
+                              Principal principal) {
+        var courses = courseService.searchCourses(keyword, level);
+        model.addAttribute("courses", courses);
+        model.addAttribute("selectedKeyword", keyword);
+        model.addAttribute("selectedLevel", level);
 
         Set<Long> enrolledCourseIds = Collections.emptySet();
-
         if (principal != null) {
             User user = userService.getByEmail(principal.getName());
             // Only fetch enrollments if user is a STUDENT
