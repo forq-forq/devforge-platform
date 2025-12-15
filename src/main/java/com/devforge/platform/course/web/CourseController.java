@@ -14,6 +14,7 @@ import com.devforge.platform.practice.service.PracticeManagementService;
 import com.devforge.platform.practice.web.dto.CreateProblemRequest;
 import com.devforge.platform.quiz.service.QuizManagementService;
 import com.devforge.platform.quiz.web.dto.CreateQuizRequest;
+import com.devforge.platform.review.service.ReviewService;
 import com.devforge.platform.practice.repository.ProblemRepository;
 import com.devforge.platform.quiz.repository.QuizQuestionRepository;
 
@@ -50,6 +51,7 @@ public class CourseController {
     private final QuizManagementService quizManagementService;
     private final ProblemRepository problemRepository;
     private final QuizQuestionRepository quizQuestionRepository;
+    private final ReviewService reviewService;
     
 
     // CONSTANTS for views
@@ -253,6 +255,22 @@ public class CourseController {
         model.addAttribute("course", course);
         model.addAttribute("isAuthor", isAuthor);
         model.addAttribute("isEnrolled", isEnrolled);
+        model.addAttribute("reviews", reviewService.getReviewsForCourse(id));
+        model.addAttribute("averageRating", reviewService.getAverageRating(id));
+
+        // Check if student can leave a review
+        boolean canReview = false;
+        if (isEnrolled) {
+             // Find enrollment again
+             var enroll = enrollmentService.getStudentEnrollments(userService.getByEmail(principal.getName())).stream()
+                 .filter(e -> e.getCourse().getId().equals(id))
+                 .findFirst().orElseThrow();
+
+             if (enroll.getProgress() == 100) {
+                 canReview = true;
+             }
+        }
+        model.addAttribute("canReview", canReview);
         
         return "course/details";
     }

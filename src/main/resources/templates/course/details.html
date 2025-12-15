@@ -30,8 +30,12 @@
                         <div>
                             <span class="badge bg-info text-dark mb-2" th:text="${course.level}">BEGINNER</span>
                             <span th:if="${isAuthor}" class="badge bg-warning text-dark" th:text="${course.status}">STATUS</span>
-                            
-                            <h1 class="fw-bold" th:text="${course.title}">Course Title</h1>
+                            <h1 class="fw-bold">
+                                <span th:text="${course.title}">Title</span>
+                                <span class="fs-5 text-warning ms-2">
+                                    <i class="bi bi-star-fill"></i> <span th:text="${averageRating}">4.5</span>
+                                </span>
+                            </h1>
                             <p class="text-muted mb-3">Author: <span th:text="${course.author.fullName}">Name</span></p>
                             <p class="lead fs-6" th:text="${course.description}">Description...</p>
                         </div>
@@ -42,6 +46,10 @@
                             <form th:unless="${isAuthor}" th:action="@{/enroll/{id}(id=${course.id})}" method="post">
                                 <button class="btn btn-primary btn-lg w-100">Start Learning</button>
                             </form>
+                            <button th:if="${canReview}" type="button" class="btn btn-outline-warning w-100 mt-2 text-dark" 
+                                    data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                ⭐ Rate this Course
+                            </button>
 
                             <!-- TEACHER ACTIONS -->
                             <div th:if="${isAuthor}">
@@ -121,6 +129,71 @@
         </div>
     </div>
 </div>
+
+<!-- Reviews Section -->
+    <div class="card shadow-sm mt-4 mb-5">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">Student Reviews</h4>
+        </div>
+        <div class="card-body">
+            <div th:if="${#lists.isEmpty(reviews)}" class="text-muted text-center py-3">
+                No reviews yet. Be the first to rate!
+            </div>
+
+            <div th:each="review : ${reviews}" class="border-bottom pb-3 mb-3">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <span class="fw-bold" th:text="${review.student.fullName}">Student Name</span>
+                        <div class="text-warning small">
+                            <!-- Хак для вывода звездочек через цикл -->
+                            <span th:each="i : ${#numbers.sequence(1, review.rating)}">★</span>
+                        </div>
+                    </div>
+                    <small class="text-muted" th:text="${#temporals.format(review.createdAt, 'dd MMM yyyy')}">Date</small>
+                </div>
+                <p class="mt-2 mb-0" th:text="${review.comment}">Nice course!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form th:action="@{/courses/{id}/reviews(id=${course.id})}" method="post">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Rate & Review</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3 text-center">
+                            <label class="form-label d-block">Your Rating</label>
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check" name="rating" id="r1" value="1" required>
+                                <label class="btn btn-outline-warning" for="r1">1</label>
+                                <input type="radio" class="btn-check" name="rating" id="r2" value="2">
+                                <label class="btn btn-outline-warning" for="r2">2</label>
+                                <input type="radio" class="btn-check" name="rating" id="r3" value="3">
+                                <label class="btn btn-outline-warning" for="r3">3</label>
+                                <input type="radio" class="btn-check" name="rating" id="r4" value="4">
+                                <label class="btn btn-outline-warning" for="r4">4</label>
+                                <input type="radio" class="btn-check" name="rating" id="r5" value="5">
+                                <label class="btn btn-outline-warning" for="r5">5</label>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Comment</label>
+                            <textarea name="comment" class="form-control" rows="3" placeholder="What did you like? What can be improved?" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
