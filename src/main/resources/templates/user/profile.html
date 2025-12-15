@@ -104,6 +104,22 @@
 
             <!-- For Teacher -->
             <div th:if="${user.role.name() == 'TEACHER'}">
+                <div class="row text-center mb-4">
+                    <div class="col-md-6 mb-2">
+                        <div class="card bg-white shadow-sm border-0 p-3">
+                            <h3 class="fw-bold mb-0 text-primary" th:text="${totalStudents}">0</h3>
+                            <small class="text-muted text-uppercase">Students Enrolled</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <div class="card bg-white shadow-sm border-0 p-3">
+                            <h3 class="fw-bold mb-0 text-warning">
+                                <span th:text="${instructorRating}">0.0</span> <span class="fs-6">★</span>
+                            </h3>
+                            <small class="text-muted text-uppercase">Avg. Rating</small>
+                        </div>
+                    </div>
+                </div>
                 <h4 class="mb-4 fw-bold">My Created Courses</h4>
                 <div class="list-group shadow-sm">
                     <a th:each="course : ${createdCourses}" 

@@ -19,4 +19,7 @@ public interface CourseReviewRepository extends JpaRepository<CourseReview, Long
     // Calculate average
     @Query("SELECT AVG(r.rating) FROM CourseReview r WHERE r.course.id = :courseId")
     Double getAverageRating(Long courseId);
+
+    @Query("SELECT AVG(r.rating) FROM CourseReview r WHERE r.course.author.id = :authorId")
+    Double getAverageRatingByAuthor(Long authorId);
 }

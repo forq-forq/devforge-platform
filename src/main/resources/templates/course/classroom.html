@@ -193,6 +193,40 @@
         <!-- GLOBAL INPUTS -->
         <input type="hidden" id="lessonId" th:value="${currentLesson.id}">
 
+        <!-- DISCUSSION SECTION -->
+        <div id="discussion" class="mt-5 pt-4 border-top">
+            <h4>💬 Discussion</h4>
+            
+            <!-- Comment Form -->
+            <form th:action="@{/learn/{lid}/comments(lid=${currentLesson.id})}" method="post" class="mb-4">
+                <div class="input-group">
+                    <textarea name="text" class="form-control" rows="2" placeholder="Ask a question or share a thought..." required></textarea>
+                    <button class="btn btn-primary">Post</button>
+                </div>
+            </form>
+
+            <!-- Comments List -->
+            <div class="list-group list-group-flush">
+                <div th:each="comment : ${comments}" class="list-group-item bg-transparent px-0">
+                    <div class="d-flex gap-2">
+                        <img th:src="${comment.user.avatarUrl}" width="40" height="40" class="rounded-circle border">
+                        <div>
+                            <div class="mb-1">
+                                <a th:href="@{/u/{id}(id=${comment.user.id})}" 
+                                   class="fw-bold me-1 text-decoration-none text-dark" 
+                                   th:text="${comment.user.fullName}">Name</a>
+                                <span class="badge bg-secondary" th:if="${comment.user.role.name() == 'TEACHER'}">INSTRUCTOR</span>
+                                <small class="text-muted ms-2" th:text="${#temporals.format(comment.createdAt, 'dd MMM HH:mm')}">Time</small>
+                            </div>
+                            <p class="mb-0 text-dark" th:text="${comment.text}">Text</p>
+                        </div>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(comments)}" class="text-muted small">
+                    No comments yet. Start the conversation!
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

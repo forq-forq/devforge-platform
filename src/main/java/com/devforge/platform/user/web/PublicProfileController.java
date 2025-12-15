@@ -2,7 +2,9 @@ package com.devforge.platform.user.web;
 
 import com.devforge.platform.course.service.CourseService;
 import com.devforge.platform.enrollment.domain.Enrollment;
+import com.devforge.platform.enrollment.repository.EnrollmentRepository;
 import com.devforge.platform.enrollment.service.EnrollmentService;
+import com.devforge.platform.review.repository.CourseReviewRepository;
 import com.devforge.platform.user.domain.Role;
 import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.service.UserService;
@@ -22,6 +24,8 @@ public class PublicProfileController {
     private final UserService userService;
     private final CourseService courseService;
     private final EnrollmentService enrollmentService;
+    private final CourseReviewRepository reviewRepository;
+    private final EnrollmentRepository enrollmentRepository;
 
     // Public URL
     @GetMapping("/u/{userId}")
@@ -38,6 +42,11 @@ public class PublicProfileController {
                     .collect(Collectors.toList());
             model.addAttribute("courses", courses);
             model.addAttribute("isTeacher", true);
+            Long totalStudents = enrollmentRepository.countTotalStudentsByAuthorId(userId);
+            Double instructorRating = reviewRepository.getAverageRatingByAuthor(user.getId());
+            
+            model.addAttribute("totalStudents", totalStudents != null ? totalStudents : 0);
+            model.addAttribute("instructorRating", instructorRating != null ? Math.round(instructorRating * 10.0) / 10.0 : 0.0);
         } else {
             // Show the achievments of student
             List<Enrollment> certificates = enrollmentService.getStudentEnrollments(user).stream()
