@@ -1,26 +1,24 @@
+server:
+  port: ${PORT:8080}
+
 spring:
   application:
     name: devforge-platform
 
   datasource:
-    url: jdbc:h2:mem:devforgedb
-    driverClassName: org.h2.Driver
-    username: sa
-    password: password
+    url: ${DATABASE_URL} 
+    username: ${PGUSER}
+    password: ${PGPASSWORD}
+    driver-class-name: org.postgresql.Driver
   
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
   
   thymeleaf:
     cache: false
@@ -31,5 +29,5 @@ spring:
       max-request-size: 5MB
   
 gemini:
-  api-key: GEMINI_API_KEY
+  api-key: ${GEMINI_API_KEY}
   url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
