@@ -148,6 +148,9 @@
                     <div>
                         <a th:href="@{/u/{id}(id=${review.student.id})}" class="fw-bold text-decoration-none text-dark" 
                            th:text="${review.student.fullName}">Student Name</a>
+                        <span class="badge ms-1" style="font-size: 0.7em;"
+                              th:classappend="'text-bg-' + ${review.student.rankColor}"
+                              th:text="${review.student.rankTitle}">Rank</span>
                         <div class="text-warning small">
                             <span th:each="i : ${#numbers.sequence(1, review.rating)}">★</span>
                         </div>

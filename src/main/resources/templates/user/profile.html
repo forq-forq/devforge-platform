@@ -27,6 +27,9 @@
                          width="120" height="120" alt="Avatar" style="background: #f8f9fa;">
                     
                     <h4 class="card-title fw-bold" th:text="${user.fullName}">User Name</h4>
+                    <span class="badge rounded-pill"
+                        th:classappend="'text-bg-' + ${user.rankColor}" 
+                        th:text="${user.rankTitle}">Grandmaster</span>
                     <span class="badge bg-secondary mb-3" th:text="${user.role}">STUDENT</span>
                     <div class="mt-3 px-3" th:if="${user.role.name() == 'STUDENT'}">
                         <div class="d-flex justify-content-between small fw-bold mb-1">

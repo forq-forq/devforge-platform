@@ -54,6 +54,8 @@ public class PublicProfileController {
                     .collect(Collectors.toList());
             model.addAttribute("certificates", certificates);
             model.addAttribute("isTeacher", false);
+            model.addAttribute("totalXp", user.getXp());
+            model.addAttribute("completedCoursesCount", certificates.size());
         }
 
         return "user/public-profile";

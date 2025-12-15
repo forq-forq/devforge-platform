@@ -91,6 +91,30 @@ public class User implements UserDetails {
         return email;
     }
 
+    public String getRankTitle() {
+        if (role == Role.TEACHER || role == Role.ADMIN) {
+            return "Instructor 🎓";
+        }
+        
+        int lvl = getLevel();
+        if (lvl < 2) return "Novice 🐣";       // 0-199 XP
+        if (lvl < 5) return "Apprentice 🔨";   // 200-499 XP
+        if (lvl < 10) return "Developer 💻";   // 500-999 XP
+        if (lvl < 20) return "Architect 🏛️";   // 1000-1999 XP
+        return "Grandmaster 👑";               // 2000+ XP
+    }
+
+    public String getRankColor() {
+        if (role == Role.TEACHER) return "info";
+        
+        int lvl = getLevel();
+        if (lvl < 2) return "secondary";
+        if (lvl < 5) return "success";
+        if (lvl < 10) return "primary";
+        if (lvl < 20) return "warning";
+        return "danger"; // Grandmaster (Red)
+    }
+
     // For MVP, accounts never expire or lock
     @Override
     public boolean isAccountNonExpired() { return true; }
