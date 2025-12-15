@@ -30,6 +30,6 @@ spring:
       max-file-size: 5MB
       max-request-size: 5MB
   
-  gemini:
-    api-key: ${GEMINI_API_KEY:change_me}
-    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
+gemini:
+  api-key: "AIzaSyDPk2NrO5zzMVOoruTf-6pZ_PHhbzv7Hbk"
+  url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent

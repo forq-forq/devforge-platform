@@ -69,16 +69,22 @@ public class GeminiService {
                 new GeminiRequest.Content(List.of(new GeminiRequest.Part(prompt)))
             ));
 
-            var response = restClient.post()
+            return restClient.post()
                     .uri(apiUrl + "?key=" + apiKey)
                     .body(request)
-                    .retrieve()
-                    .body(GeminiResponse.class);
-
-            if (response != null && !response.candidates().isEmpty()) {
-                return response.candidates().get(0).content().parts().get(0).text();
-            }
-            return "AI is silent.";
+                    .exchange((req, res) -> {
+                        if (res.getStatusCode().is2xxSuccessful()) {
+                            var response = res.bodyTo(GeminiResponse.class);
+                            if (response != null && !response.candidates().isEmpty()) {
+                                return response.candidates().get(0).content().parts().get(0).text();
+                            }
+                            return "AI вернул пустой ответ.";
+                        } else {
+                            String errorBody = new String(res.bodyTo(byte[].class));
+                            log.error("Google API Error. Status: {}, Body: {}", res.getStatusCode(), errorBody);
+                            return "ERROR API: " + res.getStatusCode();
+                        }
+                    });
         } catch (Exception e) {
             log.error("AI Error", e);
             return "AI Service Unavailable.";
