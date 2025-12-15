@@ -4,6 +4,7 @@ import com.devforge.platform.common.service.MarkdownService;
 import com.devforge.platform.course.domain.Course;
 import com.devforge.platform.course.domain.Lesson;
 import com.devforge.platform.course.repository.CourseRepository;
+import com.devforge.platform.course.repository.LessonCommentRepository;
 import com.devforge.platform.course.service.CourseService;
 import com.devforge.platform.course.service.LessonService;
 import com.devforge.platform.enrollment.repository.EnrollmentRepository;
@@ -42,6 +43,7 @@ public class ClassroomController {
     private final ProblemRepository problemRepository;
     private final QuizQuestionRepository quizQuestionRepository;
     private final CourseRepository courseRepository;
+    private final LessonCommentRepository commentRepository;
 
     /**
      * Entry point for learning. Redirects to the first lesson of the course.
@@ -109,6 +111,7 @@ public class ClassroomController {
         model.addAttribute("currentLesson", currentLesson);
         model.addAttribute("htmlContent", htmlContent);
         model.addAttribute("isAuthor", isAuthor);
+        model.addAttribute("comments", commentRepository.findAllByLessonIdOrderByCreatedAtDesc(lessonId));
         
         // Navigation
         int currentIndex = lessons.indexOf(currentLesson);
