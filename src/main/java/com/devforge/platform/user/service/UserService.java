@@ -28,4 +28,6 @@ public interface UserService {
     User getByEmail(String email);
 
     void updateProfile(Long userId, UpdateProfileRequest request);
+
+    User getById(Long id);
 }

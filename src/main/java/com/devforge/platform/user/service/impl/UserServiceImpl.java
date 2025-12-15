@@ -93,4 +93,10 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
         log.info("Profile updated for user: {}", user.getEmail());
     }
+
+    @Override
+    public User getById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+    }
 }
