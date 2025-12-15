@@ -31,6 +31,24 @@
                 </div>
             </div>
 
+            <!-- TEACHER STATS -->
+            <div class="row text-center mb-4">
+                <div class="col-6">
+                    <div class="card bg-light border-0 p-3">
+                        <h3 class="fw-bold mb-0 text-primary" th:text="${totalStudents}">1,250</h3>
+                        <small class="text-muted text-uppercase">Total Students</small>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="card bg-light border-0 p-3">
+                        <h3 class="fw-bold mb-0 text-warning">
+                            <span th:text="${instructorRating}">4.9</span> <span class="fs-6">★</span>
+                        </h3>
+                        <small class="text-muted text-uppercase">Instructor Rating</small>
+                    </div>
+                </div>
+            </div>
+
             <!-- TEACHER COURSES -->
             <div th:if="${isTeacher}">
                 <h4 class="mb-3">Courses by <span th:text="${profileUser.fullName}"></span></h4>
