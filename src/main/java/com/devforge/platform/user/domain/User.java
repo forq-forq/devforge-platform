@@ -59,8 +59,16 @@ public class User implements UserDetails {
     private String linkedinUrl;
     private String websiteUrl;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer xp = 0;
+
     public String getAvatarUrl() {
         return "https://api.dicebear.com/7.x/notionists/svg?seed=" + (this.email != null ? this.email : "guest");
+    }
+
+    public int getLevel() {
+        return 1 + (this.xp / 100);
     }
 
     /**

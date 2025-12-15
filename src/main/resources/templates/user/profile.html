@@ -28,6 +28,16 @@
                     
                     <h4 class="card-title fw-bold" th:text="${user.fullName}">User Name</h4>
                     <span class="badge bg-secondary mb-3" th:text="${user.role}">STUDENT</span>
+                    <div class="mt-3 px-3" th:if="${user.role.name() == 'STUDENT'}">
+                        <div class="d-flex justify-content-between small fw-bold mb-1">
+                            <span class="text-primary" th:text="'Lvl ' + ${user.level}">Lvl 1</span>
+                            <span class="text-muted" th:text="${user.xp} + ' XP'">0 XP</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" 
+                                 th:style="'width: ' + ${user.xp % 100} + '%'"></div>
+                        </div>
+                    </div>
                     
                     <p class="text-muted small" th:text="${user.email}">email@example.com</p>
                     
