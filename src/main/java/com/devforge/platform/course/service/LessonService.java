@@ -24,4 +24,6 @@ public interface LessonService {
      * @throws IllegalArgumentException if not found.
      */
     Lesson getLessonById(Long lessonId);
+
+    void updateLecture(Long lessonId, CreateLessonRequest request, User user);
 }

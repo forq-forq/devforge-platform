@@ -75,4 +75,45 @@ public class PracticeManagementService {
         
         log.info("Created practice lesson '{}' with {} tests", lesson.getTitle(), testCases.size());
     }
+
+    @Transactional
+    public void updatePractice(Long lessonId, CreateProblemRequest request, User teacher) {
+        // Get problem
+        Problem problem = problemRepository.findByLessonId(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Problem not found"));
+        
+        Lesson lesson = problem.getLesson();
+
+        // Check author
+        if (!lesson.getCourse().getAuthor().getId().equals(teacher.getId())) {
+            throw new AccessDeniedException("Not authorized");
+        }
+
+        // Update lesson
+        lesson.setTitle(request.getTitle());
+        lesson.setContent(request.getContent());
+        lesson.setOrderIndex(request.getOrderIndex());
+        lessonRepository.save(lesson);
+
+        // Update problem
+        problem.setClassName(request.getClassName());
+        problem.setMethodName(request.getMethodName());
+        problem.setMethodSignature(request.getMethodSignature());
+        problem.setStarterCode(request.getStarterCode());
+
+        // Update tests
+        problem.getTestCases().clear();
+        
+        List<TestCase> newTests = request.getTestCases().stream()
+                .map(dto -> TestCase.builder()
+                        .problem(problem)
+                        .inputData(dto.getInputData())
+                        .expectedOutput(dto.getExpectedOutput())
+                        .build())
+                .collect(Collectors.toList());
+        
+        problem.getTestCases().addAll(newTests);
+
+        problemRepository.save(problem);
+    }
 }
