@@ -28,6 +28,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     private final CourseService courseService;
     private final LessonProgressRepository lessonProgressRepository;
     private final LessonRepository lessonRepository;
+    private final com.devforge.platform.user.service.GamificationService gamificationService;
 
     @Override
     @Transactional
@@ -66,22 +67,29 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
         Lesson lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new IllegalArgumentException("Lesson not found"));
+
+        var existingProgress = lessonProgressRepository
+                .findByEnrollmentIdAndLessonId(enrollment.getId(), lessonId);
+
+        if (existingProgress.isPresent() && existingProgress.get().isCompleted()) {
+            return;
+        }
         
         if (!lesson.getCourse().getId().equals(courseId)) {
              throw new IllegalArgumentException("Lesson belongs to another course");
         }
 
-        LessonProgress progress = lessonProgressRepository
-                .findByEnrollmentIdAndLessonId(enrollment.getId(), lessonId)
-                .orElse(LessonProgress.builder()
-                        .enrollment(enrollment)
-                        .lesson(lesson)
-                        .build());
-        
+        LessonProgress progress = existingProgress.orElse(LessonProgress.builder()
+                .enrollment(enrollment)
+                .lesson(lesson)
+                .build());
+
         progress.setCompleted(true);
         progress.setCompletedAt(LocalDateTime.now());
         lessonProgressRepository.save(progress);
 
+        gamificationService.awardXp(student, lesson.getType());
+        
         long totalLessons = lessonRepository.countByCourseId(courseId); // Надо добавить этот метод в LessonRepository!
         long completedLessons = lessonProgressRepository.countByEnrollmentIdAndIsCompletedTrue(enrollment.getId());
 

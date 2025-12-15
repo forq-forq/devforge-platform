@@ -1,10 +1,11 @@
 package com.devforge.platform.user.repository;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
+import com.devforge.platform.user.domain.Role;
 import com.devforge.platform.user.domain.User;
 
 /**
@@ -30,4 +31,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return true if the email is already taken
      */
     boolean existsByEmail(String email);
+
+    List<User> findTop10ByRoleOrderByXpDesc(Role role);
 }
