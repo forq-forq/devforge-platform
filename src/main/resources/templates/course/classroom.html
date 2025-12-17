@@ -41,6 +41,20 @@
         .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         
         .lesson-content img { max-width: 100%; height: auto; border-radius: 5px; margin: 10px 0; }
+
+        .spinner-border-sm { width: 1rem; height: 1rem; border-width: 0.15em; }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                z-index: 1000;
+                height: 100%;
+                margin-left: -300px; 
+            }
+            .sidebar.active {
+                margin-left: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -189,7 +203,7 @@
         </div>
 
         <!-- === QUIZ === -->
-        <div th:if="${currentLesson.type.name() == 'QUIZ'}" class="h-100">
+        <div th:if="${currentLesson.type.name() == 'QUIZ'}" class="pb-5">
             <h3 class="mb-4">🧠 Knowledge Check</h3>
             <form id="quizForm">
                 <div th:each="question, qStat : ${quizQuestions}" class="card mb-4 shadow-sm">
@@ -218,7 +232,7 @@
         <input type="hidden" id="lessonId" th:value="${currentLesson.id}">
 
         <!-- DISCUSSION SECTION -->
-        <div id="discussion" class="mt-5 pt-4 border-top">
+        <div id="discussion" class="mt-5 mb-5 pt-4 border-top">
             <h4>💬 Discussion</h4>
             
             <!-- Comment Form -->
@@ -316,9 +330,10 @@
         const lessonId = document.getElementById('lessonId').value;
         const resultDiv = document.getElementById('result-message');
         const runBtn = document.getElementById('runBtn');
+        const originalText = runBtn.innerHTML;
 
         runBtn.disabled = true;
-        runBtn.innerText = "Running...";
+        runBtn.innerText = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running...';
         resultDiv.className = "text-muted";
         resultDiv.innerText = "Compiling...";
 
@@ -330,7 +345,7 @@
         .then(res => res.json())
         .then(data => {
             runBtn.disabled = false;
-            runBtn.innerText = "Run Code ▶";
+            runBtn.innerText = originalText;
             
             if (data.success) {
                 resultDiv.className = "mt-2 mb-2 p-2 border rounded bg-success-subtle text-success fw-bold font-monospace";
@@ -349,7 +364,7 @@
         })
         .catch(err => {
             runBtn.disabled = false;
-            resultDiv.innerText = "Error: " + err;
+            resultDiv.innerText = originalText;
         });
     }
 
