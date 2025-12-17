@@ -59,7 +59,7 @@
 </head>
 <body>
 
-<!-- Navbar (Optional, can be removed for immersive mode) -->
+<!-- Navbar -->
 <div th:replace="~{layout/nav :: header}"></div>
 
 <div class="wrapper">
@@ -181,8 +181,15 @@
                 
             <div id="editor-container" style="height: 60vh; min-height: 400px; border: 1px solid #ccc; border-radius: 4px;"></div>
             
+            <!-- Result Message -->
             <div id="result-message" class="mt-2 mb-2 p-2 border rounded bg-light text-muted font-monospace" style="min-height: 40px;">
                 Result will appear here...
+            </div>
+
+            <!-- NEW: Console Output -->
+            <div class="mt-2 mb-3">
+                <label class="small text-muted fw-bold">Console Output:</label>
+                <pre id="console-output" class="bg-dark text-light p-2 rounded" style="max-height: 200px; overflow-y: auto; font-size: 0.85em; min-height: 40px;">Waiting for run...</pre>
             </div>
                 
             <div class="d-flex gap-2">
@@ -197,7 +204,6 @@
             </div>
 
             <div id="aiResponse" class="alert d-none mt-3" style="white-space: pre-wrap;"></div>
-
 
             <input type="hidden" id="starterCode" th:value="${problem != null ? problem.starterCode : ''}">
         </div>
@@ -288,7 +294,7 @@
     // --- VARIABLES ---
     const lessonType = /*[[${currentLesson.type.name()}]]*/ 'LECTURE';
     const isPractice = lessonType === 'PRACTICE';
-    const isStudent = /*[[${!isAuthor}]]*/ true; // Teacher = false, Student = true
+    const isStudent = /*[[${!isAuthor}]]*/ true; 
 
     // --- MONACO EDITOR ---
     let editor;
@@ -330,10 +336,11 @@
         const lessonId = document.getElementById('lessonId').value;
         const resultDiv = document.getElementById('result-message');
         const runBtn = document.getElementById('runBtn');
+        
         const originalText = runBtn.innerHTML;
 
         runBtn.disabled = true;
-        runBtn.innerText = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running...';
+        runBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Running...';
         resultDiv.className = "text-muted";
         resultDiv.innerText = "Compiling...";
 
@@ -345,8 +352,13 @@
         .then(res => res.json())
         .then(data => {
             runBtn.disabled = false;
-            runBtn.innerText = originalText;
+            runBtn.innerHTML = originalText;
             
+            const consoleBox = document.getElementById('console-output');
+            if (consoleBox) {
+                consoleBox.innerText = data.logs || "No output.";
+            }
+
             if (data.success) {
                 resultDiv.className = "mt-2 mb-2 p-2 border rounded bg-success-subtle text-success fw-bold font-monospace";
                 resultDiv.innerText = data.message;
@@ -364,7 +376,8 @@
         })
         .catch(err => {
             runBtn.disabled = false;
-            resultDiv.innerText = originalText;
+            runBtn.innerHTML = originalText;
+            resultDiv.innerText = "Error: " + err;
         });
     }
 
