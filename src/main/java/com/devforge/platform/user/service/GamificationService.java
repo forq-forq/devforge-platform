@@ -5,7 +5,6 @@ import com.devforge.platform.user.domain.User;
 import com.devforge.platform.user.repository.UserRepository;
 import com.devforge.platform.user.service.strategy.XpAwardStrategy;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class GamificationService {
 
