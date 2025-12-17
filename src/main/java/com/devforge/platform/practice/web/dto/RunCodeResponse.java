@@ -5,5 +5,6 @@ package com.devforge.platform.practice.web.dto;
  */
 public record RunCodeResponse(
     boolean success,
-    String message
+    String message,
+    String logs
 ) {}

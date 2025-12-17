@@ -12,10 +12,10 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:update}
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         jdbc:
           lob:
             non_contextual_creation: true
@@ -26,5 +26,5 @@ spring:
       max-request-size: 5MB
 
 gemini:
-  api-key: "AIzaSyD7jwqot0rXQ4xiTrVwdRBNYJHnNKegdaU"
+  api-key: ${GEMINI_API_KEY}
   url: https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
