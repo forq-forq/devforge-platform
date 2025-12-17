@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import javax.tools.*;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.net.URI;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -27,46 +28,55 @@ public class CodeExecutionService {
      * @param problem  The problem entity containing test cases and method config.
      * @return true if all tests pass, false otherwise.
      */
-    public boolean execute(String userCode, Problem problem) {
+    public record ExecutionResult(boolean success, String logs) {}
+
+    public synchronized ExecutionResult executeWithLogs(String userCode, Problem problem) {
         log.info("Compiling user code for problem: {}", problem.getMethodName());
+        
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream oldOut = System.out;
+        PrintStream captureOut = new PrintStream(baos);
+        
+        boolean allTestsPassed = false;
 
         try {
-            // 1. Compile source code in memory
-            Class<?> compiledClass = compile(problem.getClassName(), userCode);
-            
-            // 2. Instantiate the class (equivalent to: new Solution())
-            Object instance = compiledClass.getDeclaredConstructor().newInstance();
+            System.setOut(captureOut);
 
-            // 3. Resolve the method to test using reflection
-            // TODO: Enhance signature parsing to support arrays and other types.
+            Class<?> compiledClass = compile(problem.getClassName(), userCode);
+            Object instance = compiledClass.getDeclaredConstructor().newInstance();
             Class<?>[] paramTypes = parseSignature(problem.getMethodSignature());
             Method method = compiledClass.getMethod(problem.getMethodName(), paramTypes);
 
-            // 4. Run through all test cases
+            allTestsPassed = true;
             for (TestCase test : problem.getTestCases()) {
-                // Convert string input (e.g., "5, 10") to actual objects
-                Object[] args = parseInput(test.getInputData(), paramTypes);
+                System.out.println("--- Test Input: [" + test.getInputData() + "] ---");
                 
-                // Invoke the method
+                Object[] args = parseInput(test.getInputData(), paramTypes);
                 Object result = method.invoke(instance, args);
                 
-                // Verify the result
                 String actual = String.valueOf(result);
+                System.out.println("Result: " + actual);
+                
                 if (!actual.equals(test.getExpectedOutput())) {
-                    log.warn("Test failed for input: {}. Expected: {}, Actual: {}", 
-                            test.getInputData(), test.getExpectedOutput(), actual);
-                    return false; // Fail immediately on first error
+                    System.out.println("❌ FAILED. Expected: " + test.getExpectedOutput());
+                    allTestsPassed = false;
+                    break; 
+                } else {
+                    System.out.println("✅ PASSED");
                 }
+                System.out.println(); 
             }
-            
-            log.info("All tests passed successfully for problem id: {}", problem.getId());
-            return true;
 
         } catch (Exception e) {
-            log.error("Execution failed due to compilation or runtime error", e);
-            // In a real app, we should return a structured error message to the user
-            return false;
+            e.printStackTrace(); 
+            System.out.println("\n🔥 Runtime/Compilation Error: " + e.getCause());
+            allTestsPassed = false;
+        } finally {
+            System.out.flush();
+            System.setOut(oldOut);
         }
+
+        return new ExecutionResult(allTestsPassed, baos.toString());
     }
 
     /**

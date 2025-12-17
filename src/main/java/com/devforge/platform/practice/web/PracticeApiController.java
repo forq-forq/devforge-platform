@@ -38,15 +38,15 @@ public class PracticeApiController {
         Problem problem = problemRepository.findByLessonId(lessonId)
                 .orElseThrow(() -> new IllegalArgumentException("No problem found"));
 
-        boolean passed = executionService.execute(request.code(), problem);
+        var result = executionService.executeWithLogs(request.code(), problem);
 
-        if (passed) {
+        if (result.success()) {
             if (user.getRole() == com.devforge.platform.user.domain.Role.STUDENT) {
                 enrollmentService.markLessonAsComplete(user, problem.getLesson().getCourse().getId(), lessonId);
             }
-            return ResponseEntity.ok(new RunCodeResponse(true, "All tests passed! 🏆"));
+            return ResponseEntity.ok(new RunCodeResponse(true, "All tests passed! 🏆", result.logs()));
         } else {
-            return ResponseEntity.ok(new RunCodeResponse(false, "Tests failed. ❌"));
+            return ResponseEntity.ok(new RunCodeResponse(false, "Tests failed. Check logs below. ❌", result.logs()));
         }
     }
 }
