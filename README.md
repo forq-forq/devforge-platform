@@ -3,8 +3,9 @@
 
 **DevForge** is an educational platform designed to teach Algorithms and Data Structures through interactive practice, quizzes, and AI-powered mentorship. 
 
-Website:
-GitHub:
+Website: https://devforge-platform.onrender.com/
+GitHub: https://github.com/forq-forq/devforge-platform
+
 > **Course Project:** Design Patterns and Architecture  
 > **Authors:** Igonin Nikita, Kustaubay Madiyar, 
 > **Status:** MVP / Prototype
